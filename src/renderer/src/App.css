@@ -1,0 +1,10 @@
+.App {
+  text-align: center;
+  opacity:1 ; 
+  background: #1C6758;
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  font-size: calc(10px + 2vmin);
+  color: black;
+}
