@@ -11,7 +11,7 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
   ];
 
   return (
-    <div className={`w-64 bg-gradient-to-r from-blue-800 to-blue-600 text-white h-screen shadow-lg transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+    <div className={`w-64 bg-blue-900 text-white h-screen shadow-lg transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
       <div className="p-6">
         <h1 className="text-3xl font-bold tracking-wide text-center">SchoolMS</h1>
       </div>
@@ -29,11 +29,6 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
           </button>
         ))}
       </nav>
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-300">
-          Logout
-        </button>
-      </div>
     </div>
   );
 };

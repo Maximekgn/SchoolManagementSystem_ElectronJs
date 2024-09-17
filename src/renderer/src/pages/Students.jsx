@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const StudentPaymentHistory = ({ studentId }) => {
   const [paymentHistory, setPaymentHistory] = useState([]);
@@ -14,9 +14,9 @@ const StudentPaymentHistory = ({ studentId }) => {
         }
         const data = await response.json();
         setPaymentHistory(data);
-        setLoading(false);
       } catch (error) {
         setError(error.message);
+      } finally {
         setLoading(false);
       }
     };
@@ -67,57 +67,121 @@ const AddStudentForm = ({ onAdd, onClose }) => {
     discount_in_fee: 0, blood_group: '', disease: '', previous_school: '',
     religion: '', additional_note: '', parent_name: '', parent_mobile_number: ''
   });
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleFileChange = (e) => {
-    setFormData(prev => ({ ...prev, picture: e.target.files[0] }));
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      setFormData(prev => ({ ...prev, picture: file }));
+      setErrors(prev => ({ ...prev, picture: '' }));
+    } else {
+      setErrors(prev => ({ ...prev, picture: 'Please select a valid image file.' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.surname.trim()) newErrors.surname = 'Surname is required';
+    if (!formData.date_of_birth) newErrors.date_of_birth = 'Date of birth is required';
+    if (formData.discount_in_fee < 0) newErrors.discount_in_fee = 'Discount cannot be negative';
+    // Add more validations as needed
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAdd(formData);
-    onClose();
+    if (validateForm()) {
+      onAdd(formData);
+    }
+  };
+
+  const renderField = (key, value) => {
+    switch (key) {
+      case 'picture':
+        return (
+          <input 
+            type="file" 
+            accept="image/*"
+            onChange={handleFileChange} 
+            className="w-full p-2 border rounded" 
+          />
+        );
+      case 'gender':
+        return (
+          <select 
+            name={key} 
+            value={value} 
+            onChange={handleChange} 
+            className="w-full p-2 border rounded"
+          >
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        );
+      case 'additional_note':
+        return (
+          <textarea
+            name={key}
+            value={value}
+            onChange={handleChange}
+            className="w-full p-2 border rounded"
+            rows="3"
+          />
+        );
+      default:
+        return (
+          <input
+            type={key.includes('date') ? 'date' : key === 'discount_in_fee' ? 'number' : 'text'}
+            name={key}
+            value={value}
+            onChange={handleChange}
+            className={`w-full p-2 border rounded ${errors[key] ? 'border-red-500' : ''}`}
+            required={['name', 'surname', 'date_of_birth'].includes(key)}
+          />
+        );
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
-        <h2 className="text-2xl font-bold mb-6">Ajouter un nouvel élève</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {Object.entries(formData).map(([key, value]) => (
-            <div key={key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.replace(/_/g, ' ').slice(1)}
-              </label>
-              {key === 'picture' ? (
-                <input type="file" onChange={handleFileChange} className="w-full p-2 border rounded" />
-              ) : key === 'gender' ? (
-                <select name={key} value={value} onChange={handleChange} className="w-full p-2 border rounded">
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
-              ) : (
-                <input
-                  type={key.includes('date') ? 'date' : key === 'discount_in_fee' ? 'number' : 'text'}
-                  name={key}
-                  value={value}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                  required={['name', 'surname', 'date_of_birth'].includes(key)}
-                />
-              )}
-            </div>
-          ))}
-          <div className="flex justify-end space-x-2 mt-6">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center p-4">
+      <div className="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Ajouter un nouvel élève</h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Object.entries(formData).map(([key, value]) => (
+              <div key={key} className="flex flex-col">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.replace(/_/g, ' ').slice(1)}
+                </label>
+                {renderField(key, value)}
+                {errors[key] && <p className="text-red-500 text-xs mt-1">{errors[key]}</p>}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end space-x-4 mt-8">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+            >
               Annuler
             </button>
-            <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+            <button 
+              type="submit" 
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
+            >
               Ajouter
             </button>
           </div>
@@ -127,6 +191,8 @@ const AddStudentForm = ({ onAdd, onClose }) => {
   );
 };
 
+
+
 const Students = () => {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -135,18 +201,13 @@ const Students = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
       const data = await window.electron.ipcRenderer.invoke('get-students');
-        if (data) 
-        {
-          setStudents(data);
-        }
+      if (data) {
+        setStudents(data);
+      }
       setError(null);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -154,23 +215,23 @@ const Students = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
 
   const handleAddStudent = async (newStudent) => {
     try {
-      const formData = new FormData();
-      Object.entries(newStudent).forEach(([key, value]) => {
-        if (value !== null) formData.append(key, value);
-      });
+      const result = await ipcRenderer.invoke('add-student', newStudent);
       
-      const response = await fetch('http://localhost:3001/students', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) throw new Error('Failed to add student');
-      await fetchStudents();
-      setIsAdding(false);
+      if (result.success) {
+        console.log('Student added successfully:', result.student);
+        await fetchStudents();
+        setIsAdding(false);
+      } else {
+        throw new Error(result.error);
+      }
     } catch (error) {
       console.error('Error adding student:', error);
       setError('Failed to add student. Please try again.');

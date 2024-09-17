@@ -2,79 +2,146 @@ import React, { useEffect, useState } from 'react';
 
 const StudentsPayment = () => {
   const [students, setStudents] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [amount, setAmount] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
+
+  const fetchStudentsPayments = async (query = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await window.electron.ipcRenderer.invoke('get-students-payments', query);
+      setStudents(data);
+    } catch (err) {
+      setError('Failed to fetch student payments. Please try again.');
+      console.error('Error fetching student payments:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Récupérer la liste des élèves
-    const fetchStudents = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/students'); // API pour récupérer tous les élèves
-        const data = await response.json();
-        setStudents(data);
-      } catch (error) {
-        console.error('Erreur lors de la récupération des élèves', error);
-      }
-    };
-
-    fetchStudents();
+    fetchStudentsPayments();
   }, []);
 
-  const handlePayment = async () => {
-    if (!selectedStudent || !paymentAmount) {
-      alert('Veuillez sélectionner un élève et entrer un montant');
-      return;
-    }
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    fetchStudentsPayments(searchQuery);
+  };
 
-    // Envoyer le paiement pour l'élève sélectionné
-    try {
-      const response = await fetch(`http://localhost:3001/students/${selectedStudent}/payments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount_paid: paymentAmount, payment_method: 'Cash' }),
-      });
-      if (response.ok) {
-        alert('Paiement effectué avec succès');
-        setPaymentAmount(''); // Réinitialiser le montant
-      } else {
-        alert('Erreur lors du paiement');
+  const handleAddPayment = async () => {
+    if (selectedStudent && amount > 0) {
+      setLoading(true);
+      setError(null);
+      try {
+        await window.electron.ipcRenderer.invoke('add-student-payment', selectedStudent.id, parseFloat(amount));
+        await fetchStudentsPayments();
+        setAmount('');
+        setSelectedStudent(null);
+      } catch (err) {
+        setError('Failed to add payment. Please try again.');
+        console.error('Error adding payment:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi du paiement', error);
     }
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-bold">Student Payment</h2>
-      <select 
-        className="border p-2 mt-4" 
-        value={selectedStudent} 
-        onChange={(e) => setSelectedStudent(e.target.value)}
-      >
-        <option value="">Select a Student</option>
-        {students.map(student => (
-          <option key={student.id} value={student.id}>
-            {student.name} {student.surname}
-          </option>
-        ))}
-      </select>
+    <div className="max-w-4xl mx-auto p-5 font-sans">
+      <h1 className="text-2xl font-bold mb-5">Student Payments</h1>
 
-      <div className="mt-4">
-        <input 
-          type="number" 
-          className="border p-2"
-          placeholder="Enter payment amount" 
-          value={paymentAmount}
-          onChange={(e) => setPaymentAmount(e.target.value)}
-        />
-        <button 
-          className="bg-blue-500 text-white px-4 py-2 ml-4" 
-          onClick={handlePayment}
-        >
-          Submit Payment
-        </button>
-      </div>
+      <form onSubmit={handleSearch} className="mb-5">
+        <div className="flex">
+          <input
+            type="text"
+            placeholder="Search student by name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-grow p-2 border border-gray-300 rounded-l-md"
+          />
+          <button type="submit" className="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600">
+            Search
+          </button>
+        </div>
+      </form>
+
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-5" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-center p-5 italic text-gray-600">Loading...</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="p-2 text-left">Name</th>
+                <th className="p-2 text-left">Surname</th>
+                <th className="p-2 text-left">Total Fee</th>
+                <th className="p-2 text-left">Amount Paid</th>
+                <th className="p-2 text-left">Status</th>
+                <th className="p-2 text-left">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.map((student) => (
+                <tr key={student.id} className="border-b border-gray-200 hover:bg-gray-100">
+                  <td className="p-2">{student.name}</td>
+                  <td className="p-2">{student.surname}</td>
+                  <td className="p-2">{student.total_fee}</td>
+                  <td className="p-2">{student.amount_paid}</td>
+                  <td className="p-2">
+                    <span className={`px-2 py-1 rounded ${
+                      student.status === 'Paid' ? 'bg-green-200 text-green-800' : 
+                      student.status === 'Partial' ? 'bg-yellow-200 text-yellow-800' : 
+                      'bg-red-200 text-red-800'
+                    }`}>
+                      {student.status}
+                    </span>
+                  </td>
+                  <td className="p-2">
+                    <button 
+                      onClick={() => setSelectedStudent(student)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                    >
+                      Select
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {selectedStudent && (
+        <div className="mt-5 p-5 border border-gray-300 rounded-md">
+          <h3 className="text-xl mb-3">Add Payment for {selectedStudent.name} {selectedStudent.surname}</h3>
+          <div className="flex">
+            <input
+              type="number"
+              placeholder="Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="flex-grow p-2 border border-gray-300 rounded-l-md"
+            />
+            <button 
+              onClick={handleAddPayment}
+              className="bg-green-500 text-white p-2 rounded-r-md hover:bg-green-600"
+              disabled={!amount || amount <= 0}
+            >
+              Add Payment
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
