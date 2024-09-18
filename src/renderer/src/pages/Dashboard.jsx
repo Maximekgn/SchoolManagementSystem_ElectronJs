@@ -5,9 +5,6 @@ const Dashboard = () => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalTeachers, setTotalTeachers] = useState(0);
   const [totalEmployees, setTotalEmployees] = useState(0);
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [selectedMetric, setSelectedMetric] = useState('students');
-  const [activeTab, setActiveTab] = useState('activity');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,13 +50,13 @@ const Dashboard = () => {
   }, []);
 
   const StatCard = ({ title, value, icon, color }) => (
-    <div className={`bg-white p-6 rounded-lg shadow-lg flex items-center justify-between transform hover:scale-105 transition-transform duration-300 border-l-4 border-${color}`}>
+    <div className={`bg-white p-6 rounded-lg shadow-lg flex items-center justify-between transform  transition-transform duration-300 `}>
       <div>
         <h2 className="text-xl font-semibold text-gray-700">{title}</h2>
         <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
       </div>
-      <div className={`text-${color} text-4xl`}>
-        {icon}
+      <div className={`text-4xl`}>
+        {icon} 
       </div>
     </div>
   );
@@ -71,9 +68,9 @@ const Dashboard = () => {
       <h1 className="text-4xl font-bold mb-8 text-gray-800">School Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-        <StatCard title="Total Students" value={totalStudents} icon={<FaUserGraduate />} color="blue-500" />
-        <StatCard title="Total Teachers" value={totalTeachers} icon={<FaChalkboardTeacher />} color="green-500" />
-        <StatCard title="Total Employees" value={totalEmployees} icon={<FaUsers />} color="purple-500" />
+        <StatCard title="Total Students" value={totalStudents} icon={<FaUserGraduate />} />
+        <StatCard title="Total Teachers" value={totalTeachers} icon={<FaChalkboardTeacher />}  />
+        <StatCard title="Total Employees" value={totalEmployees} icon={<FaUsers />} />
       </div>
 
     </div>

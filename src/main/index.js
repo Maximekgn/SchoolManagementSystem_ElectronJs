@@ -239,47 +239,41 @@ ipcMain.handle("get-employees", async (event, args) => {
   }
 });
 
-// Add a new student
-ipcMain.handle("add-student", async (event, args) => {
+ipcMain.handle('add-student-with-parent', async (event, formData) => {
   try {
-    const {
-      surname,
-      name,
-      date_of_birth,
-      place_of_birth,
-      gender,
-      picture,
-      registration_number,
-      date_of_admission,
-      class_id,
-      discount_in_fee,
-      blood_group,
-      medical_condition,
-      previous_school,
-      religion,
-      additional_note
-    } = args;
+    const { student, parent } = formData;
+    
+    // Commencer une transaction
+    await db.run('BEGIN TRANSACTION');
 
-    const result = await new Promise((resolve, reject) => {
-      database.run(`
-        INSERT INTO students (
-          surname, name, date_of_birth, place_of_birth, gender, picture,
-          registration_number, date_of_admission, class_id, discount_in_fee,
-          blood_group, medical_condition, previous_school, religion, additional_note
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        surname, name, date_of_birth, place_of_birth, gender, picture,
-        registration_number, date_of_admission, class_id, discount_in_fee,
-        blood_group, medical_condition, previous_school, religion, additional_note
-      ], function(err) {
-        if (err) reject(err);
-        else resolve(this.lastID);
-      });
-    });
+    // Insérer le parent
+    const parentResult = await db.run(
+      'INSERT INTO parents (surname, name, relationship, mobile_number, email, occupation, address) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [parent.surname, parent.name, parent.relationship, parent.mobile_number, parent.email, parent.occupation, parent.address]
+    );
+    const parentId = parentResult.lastID;
 
-    return { success: true, id: result };
+    // Insérer l'étudiant
+    const studentResult = await db.run(
+      'INSERT INTO students (surname, name, date_of_birth, place_of_birth, gender, picture, registration_number, date_of_admission, class, discount_in_fee, blood_group, disease, previous_school, religion, additional_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [student.surname, student.name, student.date_of_birth, student.place_of_birth, student.gender, student.picture, student.registration_number, student.date_of_admission, student.class, student.discount_in_fee, student.blood_group, student.disease, student.previous_school, student.religion, student.additional_note]
+    );
+    const studentId = studentResult.lastID;
+
+    // Créer la relation étudiant-parent
+    await db.run(
+      'INSERT INTO student_parent_relationship (student_id, parent_id) VALUES (?, ?)',
+      [studentId, parentId]
+    );
+
+    // Valider la transaction
+    await db.run('COMMIT');
+
+    return { success: true, student: { id: studentId, ...student } };
   } catch (error) {
-    console.error("Error adding student:", error);
+    // En cas d'erreur, annuler la transaction
+    await db.run('ROLLBACK');
+    console.error('Error adding student and parent:', error);
     return { success: false, error: error.message };
   }
 });

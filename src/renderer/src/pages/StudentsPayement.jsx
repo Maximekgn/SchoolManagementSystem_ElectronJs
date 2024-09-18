@@ -1,19 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const StudentsPayment = () => {
-  const [students, setStudents] = useState([]);
+  const [studentsPayments, setStudentsPayments] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [amount, setAmount] = useState('');
+  const [paymentType, setPaymentType] = useState('Tuition');
+  const [description, setDescription] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [addPaymentVisible, setAddPaymentVisible] = useState(false);
+  const [filterType, setFilterType] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  const paymentTypes = ['Tuition', 'Books', 'Supplies', 'Exam Fee', 'Other'];
 
   const fetchStudentsPayments = async (query = '') => {
     setLoading(true);
     setError(null);
     try {
-      const data = await window.electron.ipcRenderer.invoke('get-students-payments', query);
-      setStudents(data);
+      const data = await window.electron.ipcRenderer.invoke('get-payments', 'student', query);
+      setStudentsPayments(data);
     } catch (err) {
       setError('Failed to fetch student payments. Please try again.');
       console.error('Error fetching student payments:', err);
@@ -32,14 +40,20 @@ const StudentsPayment = () => {
   };
 
   const handleAddPayment = async () => {
-    if (selectedStudent && amount > 0) {
+    if (selectedStudent && amount > 0 && paymentType) {
       setLoading(true);
       setError(null);
       try {
-        await window.electron.ipcRenderer.invoke('add-student-payment', selectedStudent.id, parseFloat(amount));
+        await window.electron.ipcRenderer.invoke(
+          'add-payment',
+          selectedStudent.id,
+          null,
+          parseFloat(amount),
+          paymentType,
+          description
+        );
         await fetchStudentsPayments();
-        setAmount('');
-        setSelectedStudent(null);
+        resetForm();
       } catch (err) {
         setError('Failed to add payment. Please try again.');
         console.error('Error adding payment:', err);
@@ -49,24 +63,116 @@ const StudentsPayment = () => {
     }
   };
 
-  return (
-    <div className="max-w-4xl mx-auto p-5 font-sans">
-      <h1 className="text-2xl font-bold mb-5">Student Payments</h1>
+  const resetForm = () => {
+    setAmount('');
+    setPaymentType('Tuition');
+    setDescription('');
+    setSelectedStudent(null);
+    setAddPaymentVisible(false);
+  };
 
-      <form onSubmit={handleSearch} className="mb-5">
-        <div className="flex">
+  const filteredPayments = studentsPayments.filter(payment => 
+    filterType === 'all' || payment.payment_type === filterType
+  );
+
+  const sortedPayments = [...filteredPayments].sort((a, b) => {
+    if (sortBy === 'date') {
+      return sortOrder === 'asc' 
+        ? new Date(a.payment_date) - new Date(b.payment_date)
+        : new Date(b.payment_date) - new Date(a.payment_date);
+    } else if (sortBy === 'amount') {
+      return sortOrder === 'asc' 
+        ? a.amount - b.amount
+        : b.amount - a.amount;
+    }
+    return 0;
+  });
+
+  return (
+    <div className="max-w-6xl mx-auto p-5 font-sans">
+      <h1 className="text-gray-800 mb-5 text-3xl font-bold">Students Payment</h1>
+
+      <div className="mb-5 flex space-x-4">
+        <form onSubmit={handleSearch} className="flex-grow">
+          <div className="flex">
+            <input
+              type="text"
+              placeholder="Search for a student"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-grow p-2 text-lg border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="p-2 text-lg bg-blue-500 text-white border border-blue-500 rounded-r-md hover:bg-blue-600 transition duration-300"
+            >
+              Search
+            </button>
+          </div>
+        </form>
+        <button
+          className="bg-green-500 text-white p-2 text-lg rounded-md hover:bg-green-600 transition duration-300"
+          onClick={() => setAddPaymentVisible(!addPaymentVisible)}
+        >
+          {addPaymentVisible ? 'Hide Form' : 'Add Payment'}
+        </button>
+      </div>
+
+      {addPaymentVisible && (
+        <div className="bg-gray-100 p-5 rounded-md mb-7 shadow-md">
+          <h2 className="text-xl text-gray-800 mb-3 font-semibold">Add New Payment</h2>
+          <select
+            value={selectedStudent ? JSON.stringify(selectedStudent) : ''}
+            onChange={(e) => setSelectedStudent(e.target.value ? JSON.parse(e.target.value) : null)}
+            className="w-full p-2 mb-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select Student</option>
+            {studentsPayments.map((student) => (
+              <option key={student.id} value={JSON.stringify(student)}>
+                {student.name} {student.surname}
+              </option>
+            ))}
+          </select>
+
           <input
-            type="text"
-            placeholder="Search student by name"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-grow p-2 border border-gray-300 rounded-l-md"
+            type="number"
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full p-2 mb-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <button type="submit" className="bg-blue-500 text-white p-2 rounded-r-md hover:bg-blue-600">
-            Search
-          </button>
+          <select
+            value={paymentType}
+            onChange={(e) => setPaymentType(e.target.value)}
+            className="w-full p-2 mb-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {paymentTypes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+          <textarea
+            placeholder="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full p-2 mb-3 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <div className="flex justify-between">
+            <button
+              onClick={handleAddPayment}
+              className="bg-green-500 text-white p-2 text-lg rounded-md hover:bg-green-600 transition duration-300"
+              disabled={!selectedStudent || amount <= 0 || !paymentType}
+            >
+              Add Payment
+            </button>
+            <button
+              onClick={resetForm}
+              className="bg-gray-500 text-white p-2 text-lg rounded-md hover:bg-gray-600 transition duration-300"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
-      </form>
+      )}
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-5" role="alert">
@@ -75,71 +181,69 @@ const StudentsPayment = () => {
         </div>
       )}
 
+      <div className="mb-5 flex justify-between items-center">
+        <div>
+          <label className="mr-2">Filter by:</label>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Types</option>
+            {paymentTypes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mr-2">Sort by:</label>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
+          >
+            <option value="date">Date</option>
+            <option value="amount">Amount</option>
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
+        </div>
+      </div>
+
       {loading ? (
-        <p className="text-center p-5 italic text-gray-600">Loading...</p>
+        <p className="text-center p-5 italic text-gray-600">Loading payments...</p>
+      ) : sortedPayments.length === 0 ? (
+        <p className="text-center p-5 italic text-gray-600">No payments found.</p>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-200">
-                <th className="p-2 text-left">Name</th>
-                <th className="p-2 text-left">Surname</th>
-                <th className="p-2 text-left">Total Fee</th>
-                <th className="p-2 text-left">Amount Paid</th>
-                <th className="p-2 text-left">Status</th>
-                <th className="p-2 text-left">Action</th>
+                <th className="text-left p-3 font-semibold">Student Name</th>
+                <th className="text-left p-3 font-semibold">Amount</th>
+                <th className="text-left p-3 font-semibold">Payment Date</th>
+                <th className="text-left p-3 font-semibold">Payment Type</th>
+                <th className="text-left p-3 font-semibold">Description</th>
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
-                <tr key={student.id} className="border-b border-gray-200 hover:bg-gray-100">
-                  <td className="p-2">{student.name}</td>
-                  <td className="p-2">{student.surname}</td>
-                  <td className="p-2">{student.total_fee}</td>
-                  <td className="p-2">{student.amount_paid}</td>
-                  <td className="p-2">
-                    <span className={`px-2 py-1 rounded ${
-                      student.status === 'Paid' ? 'bg-green-200 text-green-800' : 
-                      student.status === 'Partial' ? 'bg-yellow-200 text-yellow-800' : 
-                      'bg-red-200 text-red-800'
-                    }`}>
-                      {student.status}
-                    </span>
-                  </td>
-                  <td className="p-2">
-                    <button 
-                      onClick={() => setSelectedStudent(student)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    >
-                      Select
-                    </button>
-                  </td>
+              {sortedPayments.map((payment, index) => (
+                <tr key={index} className="border-b border-gray-200 hover:bg-gray-100">
+                  <td className="p-3">{payment.name} {payment.surname}</td>
+                  <td className="p-3">${payment.amount.toFixed(2)}</td>
+                  <td className="p-3">{new Date(payment.payment_date).toLocaleDateString()}</td>
+                  <td className="p-3">{payment.payment_type}</td>
+                  <td className="p-3">{payment.description}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {selectedStudent && (
-        <div className="mt-5 p-5 border border-gray-300 rounded-md">
-          <h3 className="text-xl mb-3">Add Payment for {selectedStudent.name} {selectedStudent.surname}</h3>
-          <div className="flex">
-            <input
-              type="number"
-              placeholder="Amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="flex-grow p-2 border border-gray-300 rounded-l-md"
-            />
-            <button 
-              onClick={handleAddPayment}
-              className="bg-green-500 text-white p-2 rounded-r-md hover:bg-green-600"
-              disabled={!amount || amount <= 0}
-            >
-              Add Payment
-            </button>
-          </div>
         </div>
       )}
     </div>
