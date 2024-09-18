@@ -55,7 +55,7 @@ const App = () => {
         <footer className="bg-white shadow-lg">
           <div className="container mx-auto px-6 py-4">
             <p className="text-center text-gray-600 text-sm">
-              © 2024 School Management System. All rights reserved.
+              © 2024 School Management System. All rights reserved By MaximeKGN .
             </p>
           </div>
         </footer>
