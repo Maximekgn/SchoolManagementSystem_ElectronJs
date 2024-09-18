@@ -182,27 +182,58 @@ ipcMain.handle("close", (event, args) => {
   }
 });
 
-//to get all students
-
 // Get all students with their class information
-ipcMain.handle("get-students", async (event, args) => {
+ipcMain.handle('get-students', async () => {
   try {
-    const rows = await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       database.all(`
-        SELECT s.*, c.name AS class_name 
+        SELECT
+          s.id AS student_id,
+          s.surname AS student_surname,
+          s.name AS student_name,
+          s.date_of_birth,
+          s.place_of_birth,
+          s.gender,
+          s.picture,
+          s.registration_number,
+          s.date_of_admission,
+          s.discount_in_fee,
+          s.blood_group,
+          s.medical_condition,
+          s.previous_school,
+          s.religion,
+          s.additional_note,
+          c.name AS class_name,
+          p.surname AS parent_surname,
+          p.name AS parent_name,
+          p.relationship AS parent_relationship,
+          p.mobile_number AS parent_mobile_number,
+          p.email AS parent_email,
+          p.occupation AS parent_occupation,
+          p.address AS parent_address
         FROM students s
+        LEFT JOIN student_parent_relationship spr ON s.id = spr.student_id
+        LEFT JOIN parents p ON spr.parent_id = p.id
         LEFT JOIN classes c ON s.class_id = c.id
       `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+        if (err) {
+          console.error('Error retrieving student details:', err.message);
+          reject('Failed to retrieve student details. Please try again later.');
+        } else if (rows.length === 0) {
+          resolve({ success: false, message: 'No students found.' });
+        } else {
+          // Réponse structurée avec les détails des étudiants
+          resolve({ success: true, data: rows });
+        }
       });
     });
-    return rows;
-  } catch (err) {
-    console.error("Error retrieving students:", err);
-    throw err;
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: 'Unexpected error occurred.' };
   }
 });
+
+
 
 // Get all teachers (employees with role 'Teacher')
 ipcMain.handle("get-teachers", async (event, args) => {
@@ -239,44 +270,155 @@ ipcMain.handle("get-employees", async (event, args) => {
   }
 });
 
+//to add a student
 ipcMain.handle('add-student-with-parent', async (event, formData) => {
   try {
     const { student, parent } = formData;
 
-    // Start a transaction
-    await database.run('BEGIN TRANSACTION');
+    // To get student class id
+    const classId = await new Promise((resolve, reject) => {
+      database.get('SELECT id FROM classes WHERE name = ?', [student.class], (err, row) => {
+        if (err) reject(err);
+        else resolve(row ? row.id : null);
+      });
+    });
 
-    // Insert the parent
-    const parentResult = await database.run(
-      'INSERT INTO parents (surname, name, relationship, mobile_number, email, occupation, address) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [parent.surname, parent.name, parent.relationship, parent.mobile_number, parent.email, parent.occupation, parent.address]
-    );
-    const parentId = parentResult.lastID;
+    student.class_id = classId;
 
-    // Insert the student
-    const studentResult = await database.run(
-      'INSERT INTO students (surname, name, date_of_birth, place_of_birth, gender, picture, registration_number, date_of_admission, class_id, discount_in_fee, blood_group, medical_condition, previous_school, religion, additional_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [student.surname, student.name, student.date_of_birth, student.place_of_birth, student.gender, student.picture, student.registration_number, student.date_of_admission, student.class_id, student.discount_in_fee, student.blood_group, student.medical_condition, student.previous_school, student.religion, student.additional_note]
-    );
-    const studentId = studentResult.lastID;
+    // Validation des données pour s'assurer qu'elles ne sont pas vides ou nulles
+    if (!student || !parent) {
+      throw new Error('Student and parent data are required.');
+    }
 
-    // Create the student-parent relationship
-    await database.run(
-      'INSERT INTO student_parent_relationship (student_id, parent_id) VALUES (?, ?)',
-      [studentId, parentId]
-    );
+    // Validation des champs obligatoires pour l'étudiant
+    if (!student.firstName || !student.lastName || !student.dateOfBirth || !student.class_id || !student.registrationNumber) {
+      throw new Error('Student data is incomplete. Please provide all required fields.');
+    }
 
-    // Commit the transaction
-    await database.run('COMMIT');
+    // Validation des champs obligatoires pour le parent
+    if (!parent.firstName || !parent.lastName || !parent.email || !parent.mobileNumber) {
+      throw new Error('Parent data is incomplete. Please provide all required fields.');
+    }
 
-    return { success: true, student: { id: studentId, ...student } };
+    // Validation des formats
+    if (student.discountInFee < 0) throw new Error('Discount cannot be negative');
+    if (!/\S+@\S+\.\S+/.test(parent.email)) throw new Error('Invalid email format');
+    if (!/^\d{10}$/.test(parent.mobileNumber)) throw new Error('Mobile number must be 10 digits');
+
+    // Commencer la transaction
+    await new Promise((resolve, reject) => {
+      database.run('BEGIN TRANSACTION', [], (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    // Insertion du parent
+    const parentResult = await new Promise((resolve, reject) => {
+      database.run(
+        `INSERT INTO parents (surname, name, relationship, mobile_number, email, occupation, address)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [parent.lastName, parent.firstName, parent.relationship, parent.mobileNumber, parent.email, parent.occupation, parent.address],
+        function (err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        }
+      );
+    });
+
+    // Insertion de l'étudiant
+    const studentResult = await new Promise((resolve, reject) => {
+      database.run(
+        `INSERT INTO students (surname, name, date_of_birth, place_of_birth, gender, picture, 
+         registration_number, date_of_admission, class_id, discount_in_fee, blood_group, medical_condition, 
+         previous_school, religion, additional_note) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          student.lastName, student.firstName, student.dateOfBirth, student.placeOfBirth, student.gender,
+          student.picture, student.registrationNumber, student.dateOfAdmission, student.class_id,
+          student.discountInFee, student.bloodGroup, student.disease, student.previousSchool,
+          student.religion, student.additionalNote
+        ],
+        function (err) {
+          if (err) reject(err);
+          else resolve(this.lastID);
+        }
+      );
+    });
+
+    // Créer la relation entre l'étudiant et le parent
+    await new Promise((resolve, reject) => {
+      database.run(
+        'INSERT INTO student_parent_relationship (student_id, parent_id) VALUES (?, ?)',
+        [studentResult, parentResult],
+        (err) => {
+          if (err) reject(err);
+          else resolve();
+        }
+      );
+    });
+
+    // Commit de la transaction
+    await new Promise((resolve, reject) => {
+      database.run('COMMIT', [], (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+
+    return { success: true, student: { id: studentResult, ...student } };
   } catch (error) {
-    // If there's an error, roll back the transaction
-    await database.run('ROLLBACK');
     console.error('Error adding student and parent:', error);
+
+    // Si une erreur survient après le démarrage de la transaction, annuler la transaction
+    try {
+      await new Promise((resolve, reject) => {
+        database.run('ROLLBACK', [], (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    } catch (rollbackError) {
+      console.error('Error during rollback:', rollbackError);
+    }
+
     return { success: false, error: error.message };
   }
 });
+
+
+
+  //to get all classes 
+ipcMain.handle('get-classes', async () => {
+  return new Promise((resolve, reject) => {
+    database.all('SELECT * FROM classes', (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+});
+
+//to add a class 
+ipcMain.handle('add-class', async (event, classData) => {
+    const { name, teacherId } = classData;
+    return new Promise((resolve, reject) => {
+      database.run(
+        'INSERT INTO classes (name, teacher_id) VALUES (?, ?)',
+        [name, teacherId],
+        function (err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ id: this.lastID, name, teacherId });
+          }
+        }
+      );
+    });
+  });
+
 
 // Get students' payments with detailed information
 ipcMain.handle('get-students-payments', (event, searchQuery = '') => {

@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import SideBar from './components/SideBar';
 import Dashboard from './pages/Dashboard';
-import Students from './pages/Students';
-import Employees from './pages/Employees';
-import Payment from './pages/Payment';
+import Students from './pages/students/Students';
+import Employees from './pages/employees/Employees';
+import Payment from './pages//payment/Payment';
 import Settings from './pages/Settings';
 import { FiMenu } from 'react-icons/fi';
+import Classes from './pages/classes/Classes';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -22,6 +23,8 @@ const App = () => {
         return <Payment />;
       case 'settings':
         return <Settings />;
+      case 'classes':
+        return <Classes/>
       default:
         return <Dashboard />;
     }

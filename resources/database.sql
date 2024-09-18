@@ -1,75 +1,46 @@
--- -----------------------------------------------------
--- Table structure for table `employees`
--- -----------------------------------------------------
-CREATE TABLE `employees` (
+CREATE TABLE IF NOT EXISTS students (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   surname TEXT NOT NULL,
   name TEXT NOT NULL,
-  gender TEXT CHECK(gender IN ('Male', 'Female', 'Other')),
-  registration_number TEXT UNIQUE NOT NULL,
-  date_of_birth DATE,
-  picture BLOB,
-  national_id TEXT UNIQUE,
-  mobile_number TEXT,
-  nationality TEXT,
-  date_of_joining DATE,
-  employee_role TEXT,
-  monthly_salary DECIMAL(10,2),
-  experience TEXT,
-  religion TEXT,
-  email TEXT UNIQUE,
-  address TEXT
-);
-
-CREATE INDEX idx_employees_registration_number ON employees(registration_number);
-CREATE INDEX idx_employees_email ON employees(email);
-
--- -----------------------------------------------------
--- Table structure for table `students`
--- -----------------------------------------------------
-CREATE TABLE `students` (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  surname TEXT NOT NULL,
-  name TEXT NOT NULL,
-  date_of_birth DATE,
+  date_of_birth TEXT NOT NULL,
   place_of_birth TEXT,
-  gender TEXT CHECK(gender IN ('Male', 'Female', 'Other')),
+  gender TEXT,
   picture BLOB,
-  registration_number TEXT UNIQUE NOT NULL,
-  date_of_admission DATE,
+  registration_number TEXT,
+  date_of_admission TEXT,
   class_id INTEGER,
-  discount_in_fee DECIMAL(10,2) DEFAULT 0,
+  discount_in_fee REAL,
   blood_group TEXT,
   medical_condition TEXT,
   previous_school TEXT,
   religion TEXT,
   additional_note TEXT,
-  FOREIGN KEY (class_id) REFERENCES classes(id)
+  FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_students_registration_number ON students(registration_number);
-CREATE INDEX idx_students_class ON students(class_id);
+-- Insertion de données de test dans la table students
+INSERT INTO students (surname, name, date_of_birth, place_of_birth, gender, registration_number, date_of_admission, class_id)
+VALUES 
+('Doe', 'John', '2005-04-10', 'Paris', 'Male', 'S12345', '2021-09-01', 1),
+('Smith', 'Jane', '2006-07-15', 'Lyon', 'Female', 'S12346', '2021-09-01', 2);
 
--- -----------------------------------------------------
--- Table structure for table `parents`
--- -----------------------------------------------------
-CREATE TABLE `parents` (
+CREATE TABLE IF NOT EXISTS parents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   surname TEXT NOT NULL,
   name TEXT NOT NULL,
-  relationship TEXT CHECK(relationship IN ('Father', 'Mother', 'Guardian')),
-  mobile_number TEXT,
-  email TEXT UNIQUE,
+  relationship TEXT NOT NULL,
+  mobile_number TEXT NOT NULL,
+  email TEXT,
   occupation TEXT,
   address TEXT
 );
 
-CREATE INDEX idx_parents_email ON parents(email);
-
--- -----------------------------------------------------
--- Table structure for table `student_parent_relationship`
--- -----------------------------------------------------
-CREATE TABLE `student_parent_relationship` (
+-- Insertion de données de test dans la table parents
+INSERT INTO parents (surname, name, relationship, mobile_number, email, occupation, address)
+VALUES 
+('Doe', 'Michael', 'Father', '0612345678', 'michael.doe@example.com', 'Engineer', '123 Main St, Paris'),
+('Smith', 'Laura', 'Mother', '0623456789', 'laura.smith@example.com', 'Doctor', '456 Oak St, Lyon');
+CREATE TABLE IF NOT EXISTS student_parent_relationship (
   student_id INTEGER,
   parent_id INTEGER,
   PRIMARY KEY (student_id, parent_id),
@@ -77,191 +48,76 @@ CREATE TABLE `student_parent_relationship` (
   FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE
 );
 
--- -----------------------------------------------------
--- Table structure for table `classes`
--- -----------------------------------------------------
-CREATE TABLE `classes` (
+-- Insertion de données de test dans la table student_parent_relationship
+INSERT INTO student_parent_relationship (student_id, parent_id)
+VALUES 
+(1, 1),  -- John Doe avec Michael Doe
+(2, 2);  -- Jane Smith avec Laura Smith
+CREATE TABLE IF NOT EXISTS classes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  capacity INTEGER,
+  name TEXT NOT NULL,
   teacher_id INTEGER,
-  FOREIGN KEY (teacher_id) REFERENCES employees(id)
+  FOREIGN KEY (teacher_id) REFERENCES employees(id) ON DELETE SET NULL
 );
 
--- -----------------------------------------------------
--- Table structure for table `subjects`
--- -----------------------------------------------------
-CREATE TABLE `subjects` (
+-- Insertion de données de test dans la table classes
+INSERT INTO classes (name, teacher_id)
+VALUES 
+('Class 1', 1),
+('Class 2', 2);
+CREATE TABLE IF NOT EXISTS employees (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  description TEXT
+  surname TEXT NOT NULL,
+  name TEXT NOT NULL,
+  employee_role TEXT NOT NULL,
+  mobile_number TEXT,
+  email TEXT,
+  address TEXT
 );
 
--- -----------------------------------------------------
--- Table structure for table `class_subjects`
--- -----------------------------------------------------
-CREATE TABLE `class_subjects` (
-  class_id INTEGER,
-  subject_id INTEGER,
-  teacher_id INTEGER,
-  PRIMARY KEY (class_id, subject_id),
-  FOREIGN KEY (class_id) REFERENCES classes(id),
-  FOREIGN KEY (subject_id) REFERENCES subjects(id),
-  FOREIGN KEY (teacher_id) REFERENCES employees(id)
-);
-
--- -----------------------------------------------------
--- Table structure for table `attendance`
--- -----------------------------------------------------
-CREATE TABLE `attendance` (
+-- Insertion de données de test dans la table employees
+INSERT INTO employees (surname, name, employee_role, mobile_number, email, address)
+VALUES 
+('White', 'Alice', 'Teacher', '0678912345', 'alice.white@example.com', '789 Birch St, Paris'),
+('Brown', 'Bob', 'Teacher', '0689123456', 'bob.brown@example.com', '101 Maple St, Lyon');
+CREATE TABLE IF NOT EXISTS student_fees (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   student_id INTEGER,
-  class_id INTEGER,
-  date DATE,
-  status TEXT CHECK(status IN ('Present', 'Absent', 'Late')),
-  FOREIGN KEY (student_id) REFERENCES students(id),
-  FOREIGN KEY (class_id) REFERENCES classes(id)
-);
-
-CREATE INDEX idx_attendance_date ON attendance(date);
-
--- -----------------------------------------------------
--- Table structure for table `grades`
--- -----------------------------------------------------
-CREATE TABLE `grades` (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  student_id INTEGER,
-  subject_id INTEGER,
-  grade DECIMAL(5,2),
-  term TEXT,
-  academic_year TEXT,
-  FOREIGN KEY (student_id) REFERENCES students(id),
-  FOREIGN KEY (subject_id) REFERENCES subjects(id)
-);
-
-CREATE INDEX idx_grades_student ON grades(student_id);
-
--- -----------------------------------------------------
--- Table structure for table `payment_types`
--- -----------------------------------------------------
-CREATE TABLE `payment_types` (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE
-);
-
--- -----------------------------------------------------
--- Table structure for table `payments`
--- -----------------------------------------------------
-CREATE TABLE `payments` (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  payer_id INTEGER NOT NULL,
-  payer_type TEXT CHECK(payer_type IN ('Student', 'Employee')) NOT NULL,
-  payment_type_id INTEGER NOT NULL,
-  amount_paid DECIMAL(10,2) NOT NULL,
-  payment_date DATE NOT NULL,
-  remarks TEXT,
-  FOREIGN KEY (payment_type_id) REFERENCES payment_types(id)
-);
-
-CREATE INDEX idx_payments_payer ON payments(payer_id, payer_type);
-CREATE INDEX idx_payments_date ON payments(payment_date);
-
--- -----------------------------------------------------
--- Table structure for table `student_fees`
--- -----------------------------------------------------
-CREATE TABLE `student_fees` (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  student_id INTEGER NOT NULL,
-  total_fee DECIMAL(10,2) NOT NULL,
-  amount_paid DECIMAL(10,2) DEFAULT 0.00,
-  amount_due DECIMAL(10,2) GENERATED ALWAYS AS (total_fee - amount_paid) STORED,
-  start_date DATE NOT NULL,
-  due_date DATE NOT NULL,
-  status TEXT CHECK(status IN ('Pending', 'Paid', 'Partially Paid')) DEFAULT 'Pending',
+  total_fee REAL NOT NULL,
+  amount_paid REAL NOT NULL DEFAULT 0,
+  amount_due REAL NOT NULL,
+  status TEXT DEFAULT 'Not Paid',
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_student_fees_student ON student_fees(student_id);
-CREATE INDEX idx_student_fees_status ON student_fees(status);
-
--- -----------------------------------------------------
--- Insert test data
--- -----------------------------------------------------
-
--- Insert payment types
-INSERT INTO payment_types (name) VALUES 
-('School Fees'), ('Uniform'), ('Trip'), ('Salary'), ('Bonus'), ('Miscellaneous');
-
--- Insert employees
-INSERT INTO employees (surname, name, gender, registration_number, date_of_birth, national_id, mobile_number, nationality, date_of_joining, employee_role, monthly_salary, email)
+-- Insertion de données de test dans la table student_fees
+INSERT INTO student_fees (student_id, total_fee, amount_paid, amount_due, status)
 VALUES 
-('Smith', 'John', 'Male', 'EMP001', '1980-05-15', 'NID123456', '+1234567890', 'USA', '2020-01-01', 'Teacher', 5000.00, 'john.smith@school.com'),
-('Johnson', 'Emily', 'Female', 'EMP002', '1985-08-22', 'NID789012', '+1987654321', 'UK', '2019-09-01', 'Administrator', 4500.00, 'emily.johnson@school.com');
+(1, 5000, 1000, 4000, 'Partially Paid'),
+(2, 5000, 5000, 0, 'Paid');
+CREATE TABLE IF NOT EXISTS payments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  payer_id INTEGER,
+  payer_type TEXT NOT NULL,  -- 'Student' ou 'Employee'
+  payment_type_id INTEGER,
+  amount_paid REAL NOT NULL,
+  payment_date TEXT DEFAULT (date('now')),
+  remarks TEXT,
+  FOREIGN KEY (payer_id) REFERENCES students(id) ON DELETE CASCADE
+);
 
--- Insert classes
-INSERT INTO classes (name, capacity, teacher_id)
+-- Insertion de données de test dans la table payments
+INSERT INTO payments (payer_id, payer_type, payment_type_id, amount_paid, remarks)
 VALUES 
-('Grade 1A', 30, 1),
-('Grade 2B', 25, 2);
+(1, 'Student', 1, 1000, 'First installment'),
+(2, 'Student', 1, 5000, 'Full payment');
+CREATE TABLE IF NOT EXISTS payment_types (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL
+);
 
--- Insert subjects
-INSERT INTO subjects (name, description)
+-- Insertion de données de test dans la table payment_types
+INSERT INTO payment_types (name)
 VALUES 
-('Mathematics', 'Basic arithmetic and problem-solving'),
-('English', 'Grammar, reading, and writing skills');
-
--- Insert class_subjects
-INSERT INTO class_subjects (class_id, subject_id, teacher_id)
-VALUES 
-(1, 1, 1),
-(1, 2, 2),
-(2, 1, 1),
-(2, 2, 2);
-
--- Insert students
-INSERT INTO students (surname, name, gender, registration_number, date_of_birth, class_id, date_of_admission)
-VALUES 
-('Brown', 'Alice', 'Female', 'STU001', '2015-03-10', 1, '2021-09-01'),
-('Davis', 'Bob', 'Male', 'STU002', '2014-11-25', 2, '2020-09-01');
-
--- Insert parents
-INSERT INTO parents (surname, name, relationship, mobile_number, email)
-VALUES 
-('Brown', 'Michael', 'Father', '+1122334455', 'michael.brown@email.com'),
-('Davis', 'Sarah', 'Mother', '+5544332211', 'sarah.davis@email.com');
-
--- Insert student_parent_relationship
-INSERT INTO student_parent_relationship (student_id, parent_id)
-VALUES 
-(1, 1),
-(2, 2);
-
--- Insert attendance
-INSERT INTO attendance (student_id, class_id, date, status)
-VALUES 
-(1, 1, '2023-09-01', 'Present'),
-(2, 2, '2023-09-01', 'Present'),
-(1, 1, '2023-09-02', 'Absent'),
-(2, 2, '2023-09-02', 'Present');
-
--- Insert grades
-INSERT INTO grades (student_id, subject_id, grade, term, academic_year)
-VALUES 
-(1, 1, 85.5, 'Fall', '2023-2024'),
-(1, 2, 90.0, 'Fall', '2023-2024'),
-(2, 1, 78.5, 'Fall', '2023-2024'),
-(2, 2, 88.0, 'Fall', '2023-2024');
-
--- Insert student_fees
-INSERT INTO student_fees (student_id, total_fee, amount_paid, start_date, due_date, status)
-VALUES 
-(1, 1000.00, 500.00, '2023-09-01', '2023-12-31', 'Partially Paid'),
-(2, 1000.00, 1000.00, '2023-09-01', '2023-12-31', 'Paid');
-
--- Insert payments
-INSERT INTO payments (payer_id, payer_type, payment_type_id, amount_paid, payment_date, remarks)
-VALUES 
-(1, 'Student', 1, 500.00, '2023-09-15', 'First installment'),
-(2, 'Student', 1, 1000.00, '2023-09-05', 'Full payment'),
-(1, 'Employee', 4, 5000.00, '2023-09-30', 'September salary'),
-(2, 'Employee', 4, 4500.00, '2023-09-30', 'September salary');
+('Tuition Fee'),
+('Library Fee');
