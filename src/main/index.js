@@ -261,6 +261,7 @@ ipcMain.handle("get-employees", async (event, args) => {
       database.all("SELECT * FROM employees", (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
+        console.log(rows);
       });
     });
     return rows;
