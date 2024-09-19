@@ -139,3 +139,6 @@ const AddEmployeeForm = ({ onAdd, onClose }) => {
     </div>
   );
 };
+
+
+export default AddEmployeeForm;

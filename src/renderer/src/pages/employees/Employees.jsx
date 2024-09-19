@@ -128,34 +128,36 @@ const Employees = () => {
       </table>
 
       {selectedEmployee && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Employee Details</h2>
-            <div className="flex items-center mb-4">
-              {selectedEmployee.picture && (
-                <img
-                  src={`data:image/jpeg;base64,${selectedEmployee.picture}`}
-                  alt="Employee"
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-              )}
-              <div className="ml-4">
-                <h3 className="text-lg font-bold">{selectedEmployee.name} {selectedEmployee.surname}</h3>
-                <p className="text-sm text-gray-600">Role: {selectedEmployee.employee_role}</p>
-                <p className="text-sm text-gray-600">Email: {selectedEmployee.email}</p>
-                <p className="text-sm text-gray-600">Phone: {selectedEmployee.mobile_number}</p>
-                {/* Ajouter d'autres informations pertinentes */}
-              </div>
-            </div>
-            <button
-              onClick={() => setSelectedEmployee(null)}
-              className="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition duration-300"
-            >
-              Close
-            </button>
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+    <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+      <h2 className="text-2xl font-semibold mb-4 text-gray-800 flex items-center">
+        {selectedEmployee.picture && (
+          <img
+            src={`data:image/jpeg;base64,${selectedEmployee.picture}`}
+            alt="Employee"
+            className="w-16 h-16 rounded-full object-cover mr-4"
+          />
+        )}
+        Employee Details
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {Object.entries(selectedEmployee).map(([key, value]) => (
+          <div key={key} className="flex items-center">
+            <span className="font-medium text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+            <span className="ml-2 text-gray-800">{value}</span>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
+      <button
+        onClick={() => setSelectedEmployee(null)}
+        className="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition duration-300 mt-6"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
