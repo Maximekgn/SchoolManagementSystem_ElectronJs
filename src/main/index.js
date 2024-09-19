@@ -262,7 +262,26 @@ ipcMain.handle("get-students", (event, args) => {
 
 // update a student
 ipcMain.handle("update-student", async (event, formData) => {
-  return new Promise((resolve, reject) => {
+  try {
+    // Input validation
+    const requiredFields = ['surname', 'name', 'date_of_birth', 'gender', 'registration_number', 'class_id'];
+    for (const field of requiredFields) {
+      if (!formData[field]) {
+        throw new Error(`${field} is required`);
+      }
+    }
+
+    let picturePath = formData.picture;
+
+    // Handle picture upload if a new file is provided
+    if (formData.picture && formData.picture.path) {
+      const fileName = `${formData.registration_number}_${Date.now()}${path.extname(formData.picture.path)}`;
+      const destPath = path.join(app.getPath('userData'), 'uploads', fileName);
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      await fs.copyFile(formData.picture.path, destPath);
+      picturePath = destPath;
+    }
+
     const query = `
       UPDATE students SET
         surname = ?,
@@ -279,7 +298,8 @@ ipcMain.handle("update-student", async (event, formData) => {
         religion = ?,
         parent_name = ?,
         parent_surname = ?,
-        parent_mobile_number = ?
+        parent_mobile_number = ?,
+        picture = ?
       WHERE id = ?
     `;
 
@@ -290,22 +310,46 @@ ipcMain.handle("update-student", async (event, formData) => {
       parent_surname, parent_mobile_number, id
     } = formData;
 
-    database.run(query, [
-      surname, name, date_of_birth, place_of_birth, gender,
-      registration_number, date_of_admission, class_id, blood_group,
-      medical_condition, previous_school, religion, parent_name,
-      parent_surname, parent_mobile_number, id
-    ], function(err) {
+    return new Promise((resolve, reject) => {
+      database.run(query, [
+        surname, name, date_of_birth, place_of_birth, gender,
+        registration_number, date_of_admission, class_id, blood_group,
+        medical_condition, previous_school, religion, parent_name,
+        parent_surname, parent_mobile_number, picturePath, id
+      ], function(err) {
+        if (err) {
+          console.error("Error updating student:", err.message);
+          reject({ success: false, error: err.message });
+        } else {
+          resolve({ success: true, updatedId: this.lastID });
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error in update-student handler:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+//delete a student
+ipcMain.handle('delete-student', async (event, studentId) => {
+  return new Promise((resolve, reject) => {
+    const query = 'DELETE FROM students WHERE id = ?';
+    
+    database.run(query, [studentId], function(err) {
       if (err) {
-        console.error("Error updating student:", err.message);
-        reject(err);
+        console.error('Error deleting student:', err.message);
+        reject({ success: false, error: err.message });
       } else {
-        resolve({ success: true });
+        if (this.changes > 0) {
+          resolve({ success: true, message: 'Student deleted successfully' });
+        } else {
+          reject({ success: false, error: 'No student found with the given ID' });
+        }
       }
     });
   });
 });
-
 
 
 

@@ -1,67 +1,48 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const StudentDetails = ({ student, onClose, onUpdate }) => {
-  const [isEditing, setIsEditing] = useState(false);
-
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
-  const handleCloseEdit = () => {
-    setIsEditing(false);
-  };
-
-  if (!student) return null;
-
-  return (
-    <div className="fixed inset-0 bg-opacity-80 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-md shadow-lg max-w-lg w-full">
-        <h2 className="text-xl font-semibold mb-4 text-gray-700">Student Details</h2>
-        
-        {isEditing ? (
-          <StudentEditForm student={student} onClose={handleCloseEdit} onUpdate={onUpdate} />
-        ) : (
-          <>
-            <div className="space-y-3">
-              {Object.entries(student).map(([key, value]) => (
-                <div key={key} className="flex justify-between text-gray-600">
-                  <span className="font-medium">
-                    {key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.replace(/_/g, ' ').slice(1)}:
-                  </span>
-                  <span>{value || 'N/A'}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-6 flex justify-end space-x-4">
-              <button 
-                onClick={handleEditClick}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
-              >
-                Edit
-              </button>
-              <button 
-                onClick={onClose}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-
-
-const StudentEditForm = ({ student, onClose, onUpdate }) => {
+const StudentEditForm = ({ student, onClose, onUpdate, onDelete }) => {
   const [formData, setFormData] = useState({ ...student });
+  const [error, setError] = useState('');
+  const [classes, setClasses] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     setFormData({ ...student });
+    fetchClasses();
   }, [student]);
+
+  const fetchClasses = async () => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke('get-classes');
+      if (result) {
+        setClasses(result);
+      } else {
+        throw new Error('Failed to fetch classes');
+      }
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+      setError('Failed to load classes. Please try again.');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke('delete-student', student.id);
+      if (result.success) {
+        if (typeof onDelete === 'function') {
+          onDelete(student.id);
+        } else {
+          console.warn('onDelete is not a function. Unable to update parent component.');
+        }
+        onClose();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      setError(error.message || 'Failed to delete student. Please try again.');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -76,7 +57,11 @@ const StudentEditForm = ({ student, onClose, onUpdate }) => {
     if (file && file.type.startsWith('image/')) {
       setFormData(prev => ({
         ...prev,
-        picture: file
+        picture: {
+          path: file.path,
+          name: file.name,
+          type: file.type
+        }
       }));
     }
   };
@@ -85,14 +70,19 @@ const StudentEditForm = ({ student, onClose, onUpdate }) => {
     e.preventDefault();
     try {
       const result = await window.electron.ipcRenderer.invoke('update-student', formData);
-      if (result.success) {
-        onUpdate(formData);
+      if (result) {
+        if (typeof onUpdate === 'function') {
+          onUpdate(formData);
+        } else {
+          console.warn('onUpdate is not a function. Unable to update parent component.');
+        }
         onClose();
       } else {
-        throw new Error(result.error);
+        throw new Error('Failed to update student');
       }
     } catch (error) {
       console.error('Error updating student:', error);
+      setError(error.message || 'Failed to update student. Please try again.');
     }
   };
 
@@ -123,17 +113,24 @@ const StudentEditForm = ({ student, onClose, onUpdate }) => {
                 <option value="Other">Other</option>
               </>
             ) : (
-              <>
-                <option value="A+">A+</option>
-                <option value="A-">A-</option>
-                <option value="B+">B+</option>
-                <option value="B-">B-</option>
-                <option value="O+">O+</option>
-                <option value="O-">O-</option>
-                <option value="AB+">AB+</option>
-                <option value="AB-">AB-</option>
-              </>
+              ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(group => (
+                <option key={group} value={group}>{group}</option>
+              ))
             )}
+          </select>
+        );
+      case 'class_name':
+        return (
+          <select
+            name="class_id"
+            value={formData.class_id || ''}
+            onChange={handleChange}
+            className="w-full p-2 border border-gray-300 rounded-md"
+          >
+            <option value="">Select a class</option>
+            {classes.map(cls => (
+              <option key={cls.id} value={cls.id}>{cls.name}</option>
+            ))}
           </select>
         );
       case 'additional_note':
@@ -168,35 +165,70 @@ const StudentEditForm = ({ student, onClose, onUpdate }) => {
       <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Edit Student Details</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Object.keys(student).map((key) => (
-              <div key={key} className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+          {Object.entries(formData).map(([key, value]) => (
+            key !== 'id' && (
+              <div key={key} className="flex flex-col">
+                <label className="mb-1 font-semibold text-gray-700">
                   {key.replace(/_/g, ' ').charAt(0).toUpperCase() + key.replace(/_/g, ' ').slice(1)}
                 </label>
-                {renderField(key, formData[key])}
+                {renderField(key, value)}
               </div>
-            ))}
-          </div>
-          <div className="flex justify-end space-x-4 mt-8">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
+            )
+          ))}
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          <div className="flex justify-between space-x-4 mt-8">
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
             >
-              Cancel
+              Delete Student
             </button>
-            <button 
-              type="submit" 
-              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
-            >
-              Save
-            </button>
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </form>
       </div>
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-xl">
+            <h3 className="text-xl font-bold mb-4">Confirm Deletion</h3>
+            <p className="mb-6">Are you sure you want to delete this student? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleDelete();
+                  setShowDeleteConfirm(false);
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default StudentDetails;
+export default StudentEditForm;
