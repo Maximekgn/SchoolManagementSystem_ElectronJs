@@ -1,194 +1,268 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const AddStudentForm = ({ onAdd, onClose }) => {
   const [formData, setFormData] = useState({
-    student: {
-      lastName: '', firstName: '', dateOfBirth: '', placeOfBirth: '', gender: 'Male',
-      picture: null, registrationNumber: '', dateOfAdmission: '', class: '',
-      discountInFee: 0, bloodGroup: '', disease: '', previousSchool: '',
-      religion: '', additionalNote: ''
-    },
-    parent: {
-      lastName: '', firstName: '', relationship: 'Father', mobileNumber: '',
-      email: '', occupation: '', address: ''
-    }
+    surname: '', name: '', dateOfBirth: '', placeOfBirth: '', gender: 'Male',
+    registrationNumber: '', dateOfAdmission: '', classId: '', bloodGroup: '',
+    medicalCondition: '', previousSchool: '', religion: '', parentName: '',
+    parentSurname: '', parentMobileNumber: ''
   });
-
+  
+  const [classes, setClasses] = useState([]);
   const [errors, setErrors] = useState({});
 
-  // Handle form input changes for both student and parent
-  const handleChange = (e, type) => {
-    const { name, value, type: inputType } = e.target;
+  useEffect(() => {
+    // Fetch classes from backend
+    const fetchClasses = async () => {
+      try {
+        const response = await window.electron.ipcRenderer.invoke('get-classes');
+        setClasses(response); // Assuming the response is an array of classes
+      } catch (error) {
+        console.error('Error fetching classes:', error);
+      }
+    };
+    fetchClasses();
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [type]: {
-        ...prev[type],
-        [name]: inputType === 'number' ? parseFloat(value) : value
-      }
+      [name]: type === 'number' ? parseFloat(value) : value
     }));
 
-    if (errors[`${type}_${name}`]) {
-      setErrors(prev => ({ ...prev, [`${type}_${name}`]: '' }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
-  // Handle file (picture) changes for student
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      setFormData(prev => ({
-        ...prev,
-        student: { ...prev.student, picture: file }
-      }));
-      setErrors(prev => ({ ...prev, student_picture: '' }));
-    } else {
-      setErrors(prev => ({ ...prev, student_picture: 'Please select a valid image file.' }));
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      try {
+        const result = await window.electron.ipcRenderer.invoke('add-student', {
+          surname: formData.surname,
+          name: formData.name,
+          date_of_birth: formData.dateOfBirth,
+          place_of_birth: formData.placeOfBirth,
+          gender: formData.gender,
+          registration_number: formData.registrationNumber,
+          date_of_admission: formData.dateOfAdmission,
+          class_id: formData.classId,
+          blood_group: formData.bloodGroup,
+          medical_condition: formData.medicalCondition,
+          previous_school: formData.previousSchool,
+          religion: formData.religion,
+          parent_name: formData.parentName,
+          parent_surname: formData.parentSurname,
+          parent_mobile_number: formData.parentMobileNumber
+        });
+        if (result.id) {
+          onAdd(result.id); // Assuming the callback expects the ID of the new student
+        } else {
+          throw new Error('Failed to add student');
+        }
+      } catch (error) {
+        console.error('Error adding student:', error);
+        setErrors(prev => ({ ...prev, submit: 'Failed to add student. Please try again.' }));
+      }
     }
   };
 
-  // Validation logic
   const validateForm = () => {
     const newErrors = {};
 
-    // Student validation
-    if (!formData.student.firstName.trim()) newErrors.student_firstName = 'First name is required';
-    if (!formData.student.lastName.trim()) newErrors.student_lastName = 'Last name is required';
-    if (!formData.student.dateOfBirth) newErrors.student_dateOfBirth = 'Date of birth is required';
-    if (!formData.student.class.trim()) newErrors.student_class = 'Class is required';
-    if (!formData.student.registrationNumber.trim()) newErrors.student_registrationNumber = 'Registration number is required';
-    if (formData.student.discountInFee < 0) newErrors.student_discountInFee = 'Discount cannot be negative';
-
-    // Parent validation
-    if (!formData.parent.firstName.trim()) newErrors.parent_firstName = 'Parent first name is required';
-    if (!formData.parent.lastName.trim()) newErrors.parent_lastName = 'Parent last name is required';
-    if (!formData.parent.email.trim()) {
-      newErrors.parent_email = 'Parent email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.parent.email)) {
-      newErrors.parent_email = 'Invalid email format';
-    }
-    if (!formData.parent.mobileNumber.trim()) {
-      newErrors.parent_mobileNumber = 'Parent mobile number is required';
-    } else if (!/^\d{10}$/.test(formData.parent.mobileNumber)) {
-      newErrors.parent_mobileNumber = 'Mobile number must be 10 digits';
-    }
+    // Required fields
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.surname.trim()) newErrors.surname = 'Surname is required';
+    if (!formData.classId.trim()) newErrors.classId = 'Class ID is required';
+    if (!formData.registrationNumber.trim()) newErrors.registrationNumber = 'Registration number is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit form data
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      try {
-        const result = await window.electron.ipcRenderer.invoke('add-student-with-parent', formData);
-        if (result.success) {
-          onAdd(result.student);
-        } else {
-          throw new Error(result.error);
-        }
-      } catch (error) {
-        console.error('Error adding student and parent:', error);
-        setErrors(prev => ({ ...prev, submit: 'Failed to add student and parent. Please try again.' }));
-      }
-    }
-  };
-
-  // Render input fields based on type
-  const renderField = (key, value, type) => {
-    switch (key) {
-      case 'picture':
-        return (
-          <input 
-            type="file" 
-            accept="image/*"
-            onChange={handleFileChange} 
-            className="w-full p-2 border rounded"
-            aria-label="Student picture upload"
-          />
-        );
-      case 'gender':
-      case 'relationship':
-        return (
-          <select 
-            name={key} 
-            value={value} 
-            onChange={(e) => handleChange(e, type)} 
-            className="w-full p-2 border rounded"
-            aria-label={`${type} ${key}`}
-          >
-            {key === 'gender' ? (
-              <>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </>
-            ) : (
-              <>
-                <option value="Father">Father</option>
-                <option value="Mother">Mother</option>
-                <option value="Guardian">Guardian</option>
-              </>
-            )}
-          </select>
-        );
-      case 'additionalNote':
-      case 'address':
-        return (
-          <textarea
-            name={key}
-            value={value}
-            onChange={(e) => handleChange(e, type)}
-            className="w-full p-2 border rounded"
-            rows="3"
-            aria-label={`${type} ${key}`}
-          />
-        );
-      default:
-        return (
-          <input
-            type={key.includes('date') ? 'date' : key === 'discountInFee' ? 'number' : 'text'}
-            name={key}
-            value={value}
-            onChange={(e) => handleChange(e, type)}
-            className={`w-full p-2 border rounded ${errors[`${type}_${key}`] ? 'border-red-500' : ''}`}
-            required={['firstName', 'lastName', 'dateOfBirth', 'email'].includes(key)}
-            aria-invalid={errors[`${type}_${key}`] ? 'true' : 'false'}
-            aria-label={`${type} ${key}`}
-          />
-        );
-    }
-  };
-
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Add a new student and parent</h2>
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Add a new student</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-xl font-semibold mb-4">Student information</h3>
-              {Object.entries(formData.student).map(([key, value]) => (
-                <div key={key} className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                  </label>
-                  {renderField(key, value, 'student')}
-                  {errors[`student_${key}`] && <p className="text-red-500 text-xs mt-1">{errors[`student_${key}`]}</p>}
-                </div>
-              ))}
+              <h3 className="text-xl font-semibold mb-4">Student Information</h3>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Surname</label>
+                <input
+                  type="text"
+                  name="surname"
+                  value={formData.surname}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded ${errors.surname ? 'border-red-500' : ''}`}
+                  required
+                  aria-invalid={errors.surname ? 'true' : 'false'}
+                />
+                {errors.surname && <p className="text-red-500 text-xs mt-1">{errors.surname}</p>}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
+                  required
+                  aria-invalid={errors.name ? 'true' : 'false'}
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Place of Birth</label>
+                <input
+                  type="text"
+                  name="placeOfBirth"
+                  value={formData.placeOfBirth}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Registration Number</label>
+                <input
+                  type="text"
+                  name="registrationNumber"
+                  value={formData.registrationNumber}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded ${errors.registrationNumber ? 'border-red-500' : ''}`}
+                  required
+                  aria-invalid={errors.registrationNumber ? 'true' : 'false'}
+                />
+                {errors.registrationNumber && <p className="text-red-500 text-xs mt-1">{errors.registrationNumber}</p>}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Admission</label>
+                <input
+                  type="date"
+                  name="dateOfAdmission"
+                  value={formData.dateOfAdmission}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                <select
+                  name="classId"
+                  value={formData.classId}
+                  onChange={handleChange}
+                  className={`w-full p-2 border rounded ${errors.classId ? 'border-red-500' : ''}`}
+                  required
+                >
+                  <option value="">Select a class</option>
+                  {classes.map((cls) => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.classId && <p className="text-red-500 text-xs mt-1">{errors.classId}</p>}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
+                <input
+                  type="text"
+                  name="bloodGroup"
+                  value={formData.bloodGroup}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Medical Condition</label>
+                <input
+                  type="text"
+                  name="medicalCondition"
+                  value={formData.medicalCondition}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Previous School</label>
+                <input
+                  type="text"
+                  name="previousSchool"
+                  value={formData.previousSchool}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Religion</label>
+                <input
+                  type="text"
+                  name="religion"
+                  value={formData.religion}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-4">Parent information</h3>
-              {Object.entries(formData.parent).map(([key, value]) => (
-                <div key={key} className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                  </label>
-                  {renderField(key, value, 'parent')}
-                  {errors[`parent_${key}`] && <p className="text-red-500 text-xs mt-1">{errors[`parent_${key}`]}</p>}
-                </div>
-              ))}
+              <h3 className="text-xl font-semibold mb-4">Parent Information</h3>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
+                <input
+                  type="text"
+                  name="parentName"
+                  value={formData.parentName}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Surname</label>
+                <input
+                  type="text"
+                  name="parentSurname"
+                  value={formData.parentSurname}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Parent Mobile Number</label>
+                <input
+                  type="tel"
+                  name="parentMobileNumber"
+                  value={formData.parentMobileNumber}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
             </div>
           </div>
           {errors.submit && <p className="text-red-500 text-sm mt-2">{errors.submit}</p>}

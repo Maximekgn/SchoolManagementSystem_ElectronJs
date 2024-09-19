@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { debounce } from 'lodash';
 import AddStudentForm from './AddStudentForm';
-import StudentDetails from './StudentDetails';  // Import the new component
+import StudentDetails from './StudentDetails';  // Component to view details
 
 const StudentTable = ({ students, onSelectStudent }) => (
   <div className="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -18,10 +18,10 @@ const StudentTable = ({ students, onSelectStudent }) => (
       <tbody className="bg-white divide-y divide-gray-200">
         {students.map((student) => (
           <tr key={student.student_id} className="hover:bg-gray-50 transition duration-150">
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.student_id}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.student_name}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.student_surname}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.class_name}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.id}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.name}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.parent_mobile_number || 'N/A'}</td>
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button onClick={() => onSelectStudent(student)} className="text-blue-600 hover:text-blue-900 transition duration-300">
@@ -59,13 +59,13 @@ const Students = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10;
 
+  // Fetch students from the backend
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await window.electron.ipcRenderer.invoke('get-students');
-      console.log('Fetched students:', data); // Verify the data
-      if (data) {
-        setStudents(data.data);
+      const students = await window.electron.ipcRenderer.invoke('get-students');
+      if (students) {
+        setStudents(students);
         setError(null);
       } else {
         setError('No students found.');
@@ -82,30 +82,29 @@ const Students = () => {
     fetchStudents();
   }, [fetchStudents]);
 
+  // Handle adding a student
   const handleAddStudent = async () => {
     await fetchStudents();
     setIsAdding(false);
   };
 
+  // Debounced search
   const debouncedSearch = useMemo(() => debounce((term) => setSearchTerm(term), 300), []);
-
-  useEffect(() => {
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [debouncedSearch]);
+  useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
 
   const handleSearchChange = (e) => {
     debouncedSearch(e.target.value);
   };
 
+  // Filter students based on search term
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
-      const studentName = student.student_name ? student.student_name.toLowerCase() : '';
-      return studentName.includes(searchTerm.toLowerCase());
+      const fullName = `${student.name} ${student.surname}`.toLowerCase();
+      return fullName.includes(searchTerm.toLowerCase());
     });
   }, [students, searchTerm]);
 
+  // Pagination logic
   const paginatedStudents = useMemo(() => {
     const startIndex = (currentPage - 1) * studentsPerPage;
     return filteredStudents.slice(startIndex, startIndex + studentsPerPage);
@@ -113,8 +112,22 @@ const Students = () => {
 
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
 
-  if (isLoading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div></div>;
-  if (error) return <div className="text-center mt-8 text-red-500 text-xl">{error}</div>;
+  useEffect(() => {
+    // Reset page number if filtering changes the number of students
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [filteredStudents, totalPages, currentPage]);
+
+  // Handle loading state
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div></div>;
+  }
+
+  // Handle error state
+  if (error) {
+    return <div className="text-center mt-8 text-red-500 text-xl">{error}</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -158,4 +171,3 @@ const Students = () => {
 };
 
 export default Students;
-

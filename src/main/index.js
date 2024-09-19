@@ -182,217 +182,105 @@ ipcMain.handle("close", (event, args) => {
   }
 });
 
-// Get all students with their class information
-ipcMain.handle('get-students', async () => {
-  try {
-    return new Promise((resolve, reject) => {
-      database.all(`
-        SELECT
-          s.id AS student_id,
-          s.surname AS student_surname,
-          s.name AS student_name,
-          s.date_of_birth,
-          s.place_of_birth,
-          s.gender,
-          s.picture,
-          s.registration_number,
-          s.date_of_admission,
-          s.discount_in_fee,
-          s.blood_group,
-          s.medical_condition,
-          s.previous_school,
-          s.religion,
-          s.additional_note,
-          c.name AS class_name,
-          p.surname AS parent_surname,
-          p.name AS parent_name,
-          p.relationship AS parent_relationship,
-          p.mobile_number AS parent_mobile_number,
-          p.email AS parent_email,
-          p.occupation AS parent_occupation,
-          p.address AS parent_address
-        FROM students s
-        LEFT JOIN student_parent_relationship spr ON s.id = spr.student_id
-        LEFT JOIN parents p ON spr.parent_id = p.id
-        LEFT JOIN classes c ON s.class_id = c.id
-      `, (err, rows) => {
-        if (err) {
-          console.error('Error retrieving student details:', err.message);
-          reject('Failed to retrieve student details. Please try again later.');
-        } else if (rows.length === 0) {
-          resolve({ success: false, message: 'No students found.' });
-        } else {
-          // Réponse structurée avec les détails des étudiants
-          resolve({ success: true, data: rows });
-        }
-      });
-    });
-  } catch (error) {
-    console.error('Unexpected error:', error);
-    return { success: false, error: 'Unexpected error occurred.' };
-  }
-});
-
-
-
-// Get all teachers (employees with role 'Teacher')
-ipcMain.handle("get-teachers", async (event, args) => {
-  try {
-    const rows = await new Promise((resolve, reject) => {
-      database.all(`
-        SELECT * FROM employees 
-        WHERE employee_role = 'Teacher'
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-    return rows;
-  } catch (err) {
-    console.error("Error retrieving teachers:", err);
-    throw err;
-  }
-});
-
-// Get all employees
-ipcMain.handle("get-employees", async (event, args) => {
-  try {
-    const rows = await new Promise((resolve, reject) => {
-      database.all("SELECT * FROM employees", (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-        console.log(rows);
-      });
-    });
-    return rows;
-  } catch (err) {
-    console.error("Error retrieving employees:", err);
-    throw err;
-  }
-});
-
-//to add a student
-ipcMain.handle('add-student-with-parent', async (event, formData) => {
-  try {
-    const { student, parent } = formData;
-
-    // To get student class id
-    const classId = await new Promise((resolve, reject) => {
-      database.get('SELECT id FROM classes WHERE name = ?', [student.class], (err, row) => {
-        if (err) reject(err);
-        else resolve(row ? row.id : null);
-      });
-    });
-
-    student.class_id = classId;
-
-    // Validation des données pour s'assurer qu'elles ne sont pas vides ou nulles
-    if (!student || !parent) {
-      throw new Error('Student and parent data are required.');
-    }
-
-    // Validation des champs obligatoires pour l'étudiant
-    if (!student.firstName || !student.lastName || !student.dateOfBirth || !student.class_id || !student.registrationNumber) {
-      throw new Error('Student data is incomplete. Please provide all required fields.');
-    }
-
-    // Validation des champs obligatoires pour le parent
-    if (!parent.firstName || !parent.lastName || !parent.email || !parent.mobileNumber) {
-      throw new Error('Parent data is incomplete. Please provide all required fields.');
-    }
-
-    // Validation des formats
-    if (student.discountInFee < 0) throw new Error('Discount cannot be negative');
-    if (!/\S+@\S+\.\S+/.test(parent.email)) throw new Error('Invalid email format');
-    if (!/^\d{10}$/.test(parent.mobileNumber)) throw new Error('Mobile number must be 10 digits');
-
-    // Commencer la transaction
-    await new Promise((resolve, reject) => {
-      database.run('BEGIN TRANSACTION', [], (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-
-    // Insertion du parent
-    const parentResult = await new Promise((resolve, reject) => {
-      database.run(
-        `INSERT INTO parents (surname, name, relationship, mobile_number, email, occupation, address)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [parent.lastName, parent.firstName, parent.relationship, parent.mobileNumber, parent.email, parent.occupation, parent.address],
-        function (err) {
-          if (err) reject(err);
-          else resolve(this.lastID);
-        }
-      );
-    });
-
-    // Insertion de l'étudiant
-    const studentResult = await new Promise((resolve, reject) => {
-      database.run(
-        `INSERT INTO students (surname, name, date_of_birth, place_of_birth, gender, picture, 
-         registration_number, date_of_admission, class_id, discount_in_fee, blood_group, medical_condition, 
-         previous_school, religion, additional_note) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          student.lastName, student.firstName, student.dateOfBirth, student.placeOfBirth, student.gender,
-          student.picture, student.registrationNumber, student.dateOfAdmission, student.class_id,
-          student.discountInFee, student.bloodGroup, student.disease, student.previousSchool,
-          student.religion, student.additionalNote
-        ],
-        function (err) {
-          if (err) reject(err);
-          else resolve(this.lastID);
-        }
-      );
-    });
-
-    // Créer la relation entre l'étudiant et le parent
-    await new Promise((resolve, reject) => {
-      database.run(
-        'INSERT INTO student_parent_relationship (student_id, parent_id) VALUES (?, ?)',
-        [studentResult, parentResult],
-        (err) => {
-          if (err) reject(err);
-          else resolve();
-        }
-      );
-    });
-
-    // Commit de la transaction
-    await new Promise((resolve, reject) => {
-      database.run('COMMIT', [], (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
-
-    return { success: true, student: { id: studentResult, ...student } };
-  } catch (error) {
-    console.error('Error adding student and parent:', error);
-
-    // Si une erreur survient après le démarrage de la transaction, annuler la transaction
-    try {
-      await new Promise((resolve, reject) => {
-        database.run('ROLLBACK', [], (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
-    } catch (rollbackError) {
-      console.error('Error during rollback:', rollbackError);
-    }
-
-    return { success: false, error: error.message };
-  }
-});
-
-
-
-  //to get all classes 
-ipcMain.handle('get-classes', async () => {
+//---------------------STUDENTS-----------------------------
+//get all students
+ipcMain.handle("get-students", (event, args) => {
   return new Promise((resolve, reject) => {
-    database.all('SELECT * FROM classes', (err, rows) => {
+    const query = `
+      SELECT 
+        students.id, 
+        students.surname, 
+        students.name, 
+        students.date_of_birth, 
+        students.place_of_birth, 
+        students.gender, 
+        students.picture, 
+        students.registration_number, 
+        students.date_of_admission,
+        students.discount_in_fee, 
+        students.blood_group, 
+        students.medical_condition,
+        students.previous_school, 
+        students.religion, 
+        students.additional_note,
+        students.parent_name, 
+        students.parent_surname, 
+        students.parent_mobile_number,
+        classes.name AS class_name, 
+        classes.capacity, 
+        classes.class_fees
+      FROM students
+      LEFT JOIN classes ON students.class_id = classes.id
+    `;
+
+    database.all(query, (err, rows) => {
+      if (err) {
+        console.error("Error fetching students:", err.message);
+        reject(err); 
+      } else {
+        resolve(rows); 
+      }
+    });
+  });
+});
+
+
+
+// add a student
+  ipcMain.handle("add-student", async (event, formData) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        INSERT INTO students (
+          surname, name, date_of_birth, place_of_birth, gender, 
+          registration_number, date_of_admission, class_id, blood_group, 
+          medical_condition, previous_school, religion, parent_name, 
+          parent_surname, parent_mobile_number
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  
+      const {
+        surname, name, date_of_birth, place_of_birth, gender, 
+        registration_number, date_of_admission, class_id, blood_group, 
+        medical_condition, previous_school, religion, parent_name, 
+        parent_surname, parent_mobile_number
+      } = formData;
+  
+      database.run(query, [
+        surname, name, date_of_birth, place_of_birth, gender, 
+        registration_number, date_of_admission, class_id, blood_group, 
+        medical_condition, previous_school, religion, parent_name, 
+        parent_surname, parent_mobile_number
+      ], function(err) {
+        if (err) {
+          console.error("Error inserting student:", err.message);
+          reject(err); 
+        } else {
+          resolve({ id: this.lastID }); 
+        }
+      });
+    });
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//to get all employees
+ipcMain.handle("get-employees", (event, args) => {
+  return new Promise((resolve, reject) => {
+    database.all("SELECT * FROM employees", (err, rows) => {
       if (err) {
         reject(err);
       } else {
@@ -400,196 +288,30 @@ ipcMain.handle('get-classes', async () => {
       }
     });
   });
-});
+})
 
-//to add a class 
-ipcMain.handle('add-class', async (event, classData) => {
-    const { name, teacherId } = classData;
-    return new Promise((resolve, reject) => {
-      database.run(
-        'INSERT INTO classes (name, teacher_id) VALUES (?, ?)',
-        [name, teacherId],
-        function (err) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({ id: this.lastID, name, teacherId });
-          }
-        }
-      );
-    });
-  });
-
-
-// Get students' payments with detailed information
-ipcMain.handle('get-students-payments', (event, searchQuery = '') => {
+//to get al teachers
+ipcMain.handle("get-teachers", (event, args) => {
   return new Promise((resolve, reject) => {
-    let query = `
-      SELECT s.name, s.surname, sf.total_fee, sf.amount_paid, sf.amount_due, sf.status,
-             c.name AS class_name
-      FROM student_fees sf
-      JOIN students s ON sf.student_id = s.id
-      LEFT JOIN classes c ON s.class_id = c.id
-    `;
-    let params = [];
-
-    if (searchQuery) {
-      query += ` WHERE s.name LIKE ? OR s.surname LIKE ?`;
-      params.push(`%${searchQuery}%`, `%${searchQuery}%`);
-    }
-
-    database.all(query, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
+    database.all("SELECT * FROM employees where employee_role = 'Teacher' ", (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
     });
   });
-});
+})
 
-// Add a payment for a student
-ipcMain.handle('add-student-payment', (event, studentId, amountPaid) => {
+//to get all classes
+ipcMain.handle("get-classes", (event, args) => {
   return new Promise((resolve, reject) => {
-    database.run(`
-      UPDATE student_fees 
-      SET amount_paid = amount_paid + ?,
-          status = CASE 
-            WHEN amount_paid + ? >= total_fee THEN 'Paid'
-            ELSE 'Partially Paid'
-          END
-      WHERE student_id = ?
-    `, [amountPaid, amountPaid, studentId], function(err) {
-      if (err) reject(err);
-      else resolve({ success: true, message: 'Payment updated successfully' });
+    database.all("SELECT * FROM classes", (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
     });
   });
-});
-
-// Get all payments with detailed information
-ipcMain.handle('get-payments', (event, type = 'all', searchQuery = '') => {
-  return new Promise((resolve, reject) => {
-    let query = `
-      SELECT p.*, 
-             COALESCE(s.name || ' ' || s.surname, e.name || ' ' || e.surname) AS payer_name,
-             pt.name AS payment_type_name
-      FROM payments p
-      LEFT JOIN students s ON p.payer_id = s.id AND p.payer_type = 'Student'
-      LEFT JOIN employees e ON p.payer_id = e.id AND p.payer_type = 'Employee'
-      JOIN payment_types pt ON p.payment_type_id = pt.id
-    `;
-    let params = [];
-
-    if (type !== 'all') {
-      query += ` WHERE p.payer_type = ?`;
-      params.push(type);
-    }
-
-    if (searchQuery) {
-      query += params.length ? ' AND' : ' WHERE';
-      query += ` (s.name LIKE ? OR s.surname LIKE ? OR e.name LIKE ? OR e.surname LIKE ?)`;
-      params.push(`%${searchQuery}%`, `%${searchQuery}%`, `%${searchQuery}%`, `%${searchQuery}%`);
-    }
-
-    database.all(query, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-});
-
-// Add a new payment
-ipcMain.handle('add-payment', (event, payerId, payerType, amount, paymentTypeId, remarks) => {
-  return new Promise((resolve, reject) => {
-    const query = `
-      INSERT INTO payments (payer_id, payer_type, payment_type_id, amount_paid, payment_date, remarks)
-      VALUES (?, ?, ?, ?, date('now'), ?)
-    `;
-
-    database.run(query, [payerId, payerType, paymentTypeId, amount, remarks], function(err) {
-      if (err) reject(err);
-      else resolve({ success: true, message: 'Payment added successfully', id: this.lastID });
-    });
-  });
-});
-
-// New query: Get classes with their assigned teachers
-ipcMain.handle('get-classes-with-teachers', async () => {
-  try {
-    const rows = await new Promise((resolve, reject) => {
-      database.all(`
-        SELECT c.*, e.name || ' ' || e.surname AS teacher_name
-        FROM classes c
-        LEFT JOIN employees e ON c.teacher_id = e.id
-      `, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-    return rows;
-  } catch (err) {
-    console.error("Error retrieving classes with teachers:", err);
-    throw err;
-  }
-});
-
-// New query: Get subjects for a specific class
-ipcMain.handle('get-class-subjects', async (event, classId) => {
-  try {
-    const rows = await new Promise((resolve, reject) => {
-      database.all(`
-        SELECT s.*, e.name || ' ' || e.surname AS teacher_name
-        FROM class_subjects cs
-        JOIN subjects s ON cs.subject_id = s.id
-        LEFT JOIN employees e ON cs.teacher_id = e.id
-        WHERE cs.class_id = ?
-      `, [classId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-    return rows;
-  } catch (err) {
-    console.error("Error retrieving subjects for class:", err);
-    throw err;
-  }
-});
-
-// New query: Get attendance for a specific class and date range
-ipcMain.handle('get-class-attendance', async (event, classId, startDate, endDate) => {
-  try {
-    const rows = await new Promise((resolve, reject) => {
-      database.all(`
-        SELECT a.*, s.name || ' ' || s.surname AS student_name
-        FROM attendance a
-        JOIN students s ON a.student_id = s.id
-        WHERE a.class_id = ? AND a.date BETWEEN ? AND ?
-      `, [classId, startDate, endDate], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-    return rows;
-  } catch (err) {
-    console.error("Error retrieving class attendance:", err);
-    throw err;
-  }
-});
-
-// New query: Get grades for a specific student
-ipcMain.handle('get-student-grades', async (event, studentId) => {
-  try {
-    const rows = await new Promise((resolve, reject) => {
-      database.all(`
-        SELECT g.*, s.name AS subject_name
-        FROM grades g
-        JOIN subjects s ON g.subject_id = s.id
-        WHERE g.student_id = ?
-      `, [studentId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-    return rows;
-  } catch (err) {
-    console.error("Error retrieving student grades:", err);
-    throw err;
-  }
-});
+})

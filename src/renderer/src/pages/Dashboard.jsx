@@ -10,10 +10,9 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await window.electron.ipcRenderer.invoke('get-students');
-        console.log("Received students data:", data); // Log pour voir la structure des données
-        if (data && data.success) {
-          setTotalStudents(data.data.length); // Assure-toi d'accéder à la bonne propriété
+        const students = await window.electron.ipcRenderer.invoke('get-students');
+        if (students) {
+          setTotalStudents(students.length);
         }
   
         const teachers = await window.electron.ipcRenderer.invoke('get-teachers');

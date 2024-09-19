@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 // Composant pour afficher un formulaire d'ajout d'employés
-const AddEmployeeForm = ({ onAdd, onClose }) => {
+const AddEmployeeForm = ({ onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
@@ -33,9 +33,25 @@ const AddEmployeeForm = ({ onAdd, onClose }) => {
     setFormData((prev) => ({ ...prev, picture: e.target.files[0] }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onAdd(formData);
+
+    // Création de FormData pour gérer les fichiers
+    const dataToSend = new FormData();
+    Object.keys(formData).forEach((key) => {
+      dataToSend.append(key, formData[key]);
+    });
+
+    try {
+      const result = await window.electron.ipcRenderer.invoke('add-employee', dataToSend); // Appel IPC
+      console.log("Employee added with ID:", result);
+      onClose(); // Fermer le formulaire
+    } catch (error) {
+      console.error("Error adding employee:", error);
+      alert('Error adding employee. Please try again.');
+    }
+
+    // Réinitialiser le formulaire
     setFormData({
       name: '',
       surname: '',
@@ -54,7 +70,6 @@ const AddEmployeeForm = ({ onAdd, onClose }) => {
       email: '',
       address: ''
     });
-    onClose();
   };
 
   return (
@@ -70,6 +85,7 @@ const AddEmployeeForm = ({ onAdd, onClose }) => {
                   <input
                     type="file"
                     name="picture"
+                    accept="image/*"
                     onChange={handleFileChange}
                     className="mt-1 block w-full text-sm text-gray-500
                     file:mr-4 file:py-2 file:px-4
@@ -114,7 +130,7 @@ const AddEmployeeForm = ({ onAdd, onClose }) => {
                   value={formData[key]}
                   onChange={handleChange}
                   className="mt-1 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required={['name', 'surname', 'date_of_birth'].includes(key)}
+                  required={['name', 'surname', 'date_of_birth', 'employee_role'].includes(key)}
                 />
               </div>
             );
@@ -139,6 +155,5 @@ const AddEmployeeForm = ({ onAdd, onClose }) => {
     </div>
   );
 };
-
 
 export default AddEmployeeForm;
