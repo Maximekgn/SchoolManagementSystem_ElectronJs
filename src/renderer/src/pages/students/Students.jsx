@@ -21,7 +21,7 @@ const StudentTable = ({ students, onSelectStudent }) => (
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.id}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.name}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.class_name}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.parent_mobile_number || 'N/A'}</td>
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button onClick={() => onSelectStudent(student)} className="text-blue-600 hover:text-blue-900 transition duration-300">

@@ -260,6 +260,51 @@ ipcMain.handle("get-students", (event, args) => {
     });
   });
 
+// update a student
+ipcMain.handle("update-student", async (event, formData) => {
+  return new Promise((resolve, reject) => {
+    const query = `
+      UPDATE students SET
+        surname = ?,
+        name = ?,
+        date_of_birth = ?,
+        place_of_birth = ?,
+        gender = ?,
+        registration_number = ?,
+        date_of_admission = ?,
+        class_id = ?,
+        blood_group = ?,
+        medical_condition = ?,
+        previous_school = ?,
+        religion = ?,
+        parent_name = ?,
+        parent_surname = ?,
+        parent_mobile_number = ?
+      WHERE id = ?
+    `;
+
+    const {
+      surname, name, date_of_birth, place_of_birth, gender,
+      registration_number, date_of_admission, class_id, blood_group,
+      medical_condition, previous_school, religion, parent_name,
+      parent_surname, parent_mobile_number, id
+    } = formData;
+
+    database.run(query, [
+      surname, name, date_of_birth, place_of_birth, gender,
+      registration_number, date_of_admission, class_id, blood_group,
+      medical_condition, previous_school, religion, parent_name,
+      parent_surname, parent_mobile_number, id
+    ], function(err) {
+      if (err) {
+        console.error("Error updating student:", err.message);
+        reject(err);
+      } else {
+        resolve({ success: true });
+      }
+    });
+  });
+});
 
 
 
@@ -290,7 +335,7 @@ ipcMain.handle("get-employees", (event, args) => {
   });
 })
 
-//to get al teachers
+//to get all teachers
 ipcMain.handle("get-teachers", (event, args) => {
   return new Promise((resolve, reject) => {
     database.all("SELECT * FROM employees where employee_role = 'Teacher' ", (err, rows) => {
