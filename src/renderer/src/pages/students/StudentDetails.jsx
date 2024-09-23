@@ -25,24 +25,7 @@ const StudentEditForm = ({ student, onClose, onUpdate, onDelete }) => {
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      const result = await window.electron.ipcRenderer.invoke('delete-student', student.id);
-      if (result.success) {
-        if (typeof onDelete === 'function') {
-          onDelete(student.id);
-        } else {
-          console.warn('onDelete is not a function. Unable to update parent component.');
-        }
-        onClose();
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error('Error deleting student:', error);
-      setError(error.message || 'Failed to delete student. Please try again.');
-    }
-  };
+
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -177,13 +160,7 @@ const StudentEditForm = ({ student, onClose, onUpdate, onDelete }) => {
           ))}
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           <div className="flex justify-between space-x-4 mt-8">
-            <button
-              type="button"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-            >
-              Delete Student
-            </button>
+            
             <div className="flex space-x-4">
               <button
                 type="button"

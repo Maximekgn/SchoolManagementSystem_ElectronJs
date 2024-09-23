@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS students (
   date_of_admission DATE NOT NULL,
   class_id INTEGER,
   discount_in_fee REAL DEFAULT 0,
-  blood_group TEXT CHECK (blood_group IN ('A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-')),
+  blood_group TEXT ,
   medical_condition TEXT,
   previous_school TEXT,
   religion TEXT,
