@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 const AddStudentForm = ({ onAdd, onClose }) => {
   const [formData, setFormData] = useState({
-    surname: '', name: '', dateOfBirth: '', placeOfBirth: '', gender: 'Male',
-    registrationNumber: '', dateOfAdmission: '', classId: '', bloodGroup: '',
-    medicalCondition: '', previousSchool: '', religion: '', parentName: '',
+    surname: '', name: '', dateOfBirth: '', placeOfBirth: 'unknown', gender: 'Male',
+    registrationNumber: 'unknown', dateOfAdmission: '', classId: '', bloodGroup: 'unknown',
+    medicalCondition: '', previousSchool: '', religion: 'unknown', parentName: '',
     parentSurname: '', parentMobileNumber: ''
   });
   
