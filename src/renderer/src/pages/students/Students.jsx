@@ -3,7 +3,7 @@ import { debounce } from 'lodash';
 import AddStudentForm from './AddStudentForm';
 import StudentDetails from './StudentDetails';  // Component to view details
 
-const StudentTable = ({ students, onSelectStudent }) => (
+const StudentTable = ({ students, onSelectStudent, onDeleteStudent }) => (
   <div className="bg-white shadow overflow-hidden sm:rounded-lg">
     <table className="min-w-full divide-y divide-gray-200">
       <thead className="bg-gray-50">
@@ -23,10 +23,11 @@ const StudentTable = ({ students, onSelectStudent }) => (
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.class_name}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.parent_mobile_number || 'N/A'}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ">
               <button onClick={() => onSelectStudent(student)} className="text-blue-600 hover:text-blue-900 transition duration-300">
-                View Details
+                View/edit
               </button>
+              <button className='text-red-600 hover:text-red-900 mx-2' onClick={() => handleDelete(student.id, onDeleteStudent)}>Delete</button>
             </td>
           </tr>
         ))}
@@ -48,6 +49,23 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => (
     ))}
   </div>
 );
+
+const handleDelete = async (id, onDeleteStudent) => {
+  const confirmDelete = window.confirm('Are you sure you want to delete this student?');
+  if (!confirmDelete) return;
+
+  try {
+    const result = await window.electron.ipcRenderer.invoke('delete-student', id);
+    if (result.success) {
+      onDeleteStudent();
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (error) {
+    console.error('Error deleting student:', error);
+    setError(error.message || 'Failed to delete student. Please try again.');
+  }
+};
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -147,7 +165,7 @@ const Students = () => {
 
       {filteredStudents.length > 0 ? (
         <>
-          <StudentTable students={paginatedStudents} onSelectStudent={setSelectedStudent} />
+          <StudentTable students={paginatedStudents} onSelectStudent={setSelectedStudent} onDeleteStudent={fetchStudents} />
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </>
       ) : (
@@ -155,9 +173,9 @@ const Students = () => {
       )}
 
       {selectedStudent && (
-        <StudentDetails 
-          student={selectedStudent} 
-          onClose={() => setSelectedStudent(null)} 
+        <StudentDetails
+          student={selectedStudent}
+          onClose={() => setSelectedStudent(null)}
         />
       )}
 
