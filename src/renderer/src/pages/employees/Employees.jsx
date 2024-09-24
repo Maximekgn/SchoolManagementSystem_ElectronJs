@@ -1,163 +1,215 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { debounce } from 'lodash';
 import AddEmployeeForm from './AddEmployeeForm';
+import ViewEmployee from './ViewEmployee';
+import EditEmployee from './EditEmployee';
 
-// Composant principal pour gérer et afficher les employés
+const EmployeeTable = ({ employees, onViewEmployee, onEditEmployee, onDeleteEmployee }) => (
+  <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          {['ID', 'Name', 'Surname', 'Role', 'Phone Number', 'Actions'].map((header) => (
+            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {header}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {employees.map((employee) => (
+          <tr key={employee.id} className="hover:bg-gray-50 transition duration-150">
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.id}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{employee.name}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.surname}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.employee_role}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.mobile_number || 'N/A'}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <button onClick={() => onViewEmployee(employee)} className="text-blue-600 hover:text-blue-900 transition duration-300 mr-2">
+                View
+              </button>
+              <button onClick={() => onEditEmployee(employee)} className="text-green-600 hover:text-green-900 transition duration-300 mr-2">
+                Edit
+              </button>
+              <button onClick={() => onDeleteEmployee(employee.id)} className="text-red-600 hover:text-red-900 transition duration-300">
+                Delete
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => (
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={() => onPageChange(currentPage - 1)}
+      disabled={currentPage === 1}
+      className="px-3 py-1 bg-gray-200 rounded mr-2"
+    >
+      Previous
+    </button>
+    <span>{currentPage} of {totalPages}</span>
+    <button
+      onClick={() => onPageChange(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      className="px-3 py-1 bg-gray-200 rounded ml-2"
+    >
+      Next
+    </button>
+  </div>
+);
+
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const employeesPerPage = 10;
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  const fetchEmployees = async () => {
+  // Fetch employees from the API
+  const fetchEmployees = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await window.electron.ipcRenderer.invoke('get-employees');
-        if (data) 
-        {
-          setEmployees(data);
-        }
-      setError(null);
+      const response = await window.electron.ipcRenderer.invoke('get-employees');
+      setEmployees(response);
     } catch (error) {
-      console.error('Error fetching Employees:', error);
-      setError('Failed to load Employees. Please try again later.');
+      setError('Failed to fetch employees. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   const handleAddEmployee = async (newEmployee) => {
     try {
-      const formData = new FormData();
-      Object.keys(newEmployee).forEach((key) => {
-        if (newEmployee[key] !== null) {
-          formData.append(key, newEmployee[key]);
-        }
-      });
-
-      const response = await fetch('http://localhost:3001/employees', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add employee');
+      const result = await window.electron.ipcRenderer.invoke('add-employee', newEmployee);
+      if (result.success) {
+        await fetchEmployees();
+        setIsAdding(false);
+      } else {
+        throw new Error(result.error);
       }
-
-      await fetchEmployees();
-      setIsAdding(false);
     } catch (error) {
-      console.error('Error adding employee:', error);
       setError('Failed to add employee. Please try again.');
     }
   };
 
-  const filteredEmployees = employees.filter((employee) =>
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.surname.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDeleteEmployee = async (id) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this employee?');
+    if (!confirmDelete) return;
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div></div>;
-  }
+    try {
+      const result = await window.electron.ipcRenderer.invoke('delete-employee', id);
+      if (result.success) {
+        await fetchEmployees();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setError('Failed to delete employee. Please try again.');
+    }
+  };
 
-  if (error) {
-    return <div className="flex items-center justify-center h-screen text-xl text-red-500">{error}</div>;
-  }
+  const handleSearchChange = useMemo(() => debounce((e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on new search
+  }, 300), []);
+
+  const handleViewEmployee = (employee) => {
+    setSelectedEmployee(employee);
+    setIsViewing(true);
+  };
+
+  const handleEditEmployee = (employee) => {
+    setSelectedEmployee(employee);
+    setIsEditing(true);
+    fetchEmployees();
+  };
+
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((employee) =>
+      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.surname.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [employees, searchTerm]);
+
+  const totalPages = Math.ceil(filteredEmployees.length / employeesPerPage);
+  const paginatedEmployees = useMemo(() => {
+    const start = (currentPage - 1) * employeesPerPage;
+    return filteredEmployees.slice(start, start + employeesPerPage);
+  }, [filteredEmployees, currentPage, employeesPerPage]);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <h1 className="text-4xl font-bold mb-8 text-gray-800">Employees Management</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Employee List</h1>
 
-      <div className="mb-6 flex space-x-4">
-        <button
-          onClick={() => setIsAdding(true)}
-          className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition duration-300 flex items-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 2a1 1 0 011 1v6h6a1 1 0 110 2h-6v6a1 1 0 01-2 0v-6H3a1 1 0 110-2h6V3a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
+      <div className="flex justify-between items-center mb-6">
+        <button onClick={() => setIsAdding(true)} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
           Add Employee
         </button>
         <input
           type="text"
-          value={searchTerm}
+          placeholder="Search for an employee..."
           onChange={handleSearchChange}
-          placeholder="Search by name or surname..."
-          className="w-full max-w-md border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="border p-2 rounded w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
-      {isAdding && <AddEmployeeForm onAdd={handleAddEmployee} onClose={() => setIsAdding(false)} />}
-
-      <table className="min-w-full divide-y divide-gray-200 mt-4">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Surname</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredEmployees.map((employee) => (
-            <tr key={employee.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{employee.name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.surname}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.employee_role}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button
-                  onClick={() => setSelectedEmployee(employee)}
-                  className="text-blue-600 hover:text-blue-900"
-                >
-                  View Details
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {selectedEmployee && (
-  <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-    <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800 flex items-center">
-        {selectedEmployee.picture && (
-          <img
-            src={`data:image/jpeg;base64,${selectedEmployee.picture}`}
-            alt="Employee"
-            className="w-16 h-16 rounded-full object-cover mr-4"
+      {isLoading ? (
+        <div className="text-center text-gray-500">Loading employees...</div>
+      ) : filteredEmployees.length > 0 ? (
+        <>
+          <EmployeeTable
+            employees={paginatedEmployees}
+            onViewEmployee={handleViewEmployee}
+            onEditEmployee={handleEditEmployee}
+            onDeleteEmployee={handleDeleteEmployee}
           />
-        )}
-        Employee Details
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.entries(selectedEmployee).map(([key, value]) => (
-          <div key={key} className="flex items-center">
-            <span className="font-medium text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
-            <span className="ml-2 text-gray-800">{value}</span>
-          </div>
-        ))}
-      </div>
-      <button
-        onClick={() => setSelectedEmployee(null)}
-        className="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition duration-300 mt-6"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        </>
+      ) : (
+        <div className="text-center text-gray-500">No employees found.</div>
+      )}
 
+      {isViewing && (
+        <ViewEmployee
+          employee={selectedEmployee}
+          onClose={() => {
+            setSelectedEmployee(null);
+            setIsViewing(false);
+          }}
+        />
+      )}
+
+      {isEditing && (
+        <EditEmployee
+          employee={selectedEmployee}
+          onClose={() => {
+            setSelectedEmployee(null);
+            setIsEditing(false);
+          }}
+          onUpdate={fetchEmployees}
+        />
+      )}
+
+      {isAdding && (
+        <React.Suspense fallback={<div>Loading form...</div>}>
+          <AddEmployeeForm onAdd={handleAddEmployee} onClose={() => setIsAdding(false)} />
+        </React.Suspense>
+      )}
+
+      {error && <div className="text-red-500 mt-4">{error}</div>}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const StudentEdit = ({ student, onClose }) => {
+const StudentEdit = ({ student, onClose , onSave }) => {
   const [editedStudent, setEditedStudent] = useState({ ...student });
   const [classes, setClasses] = useState([]);
 

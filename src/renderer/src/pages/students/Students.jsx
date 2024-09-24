@@ -133,6 +133,7 @@ const Students = () => {
   const handleEditStudent = (student) => {
     setSelectedStudent(student);
     setIsEditing(true);
+    fetchStudents();
   };
 
   const filteredStudents = useMemo(() => {
