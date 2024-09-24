@@ -76,3 +76,42 @@ VALUES
 
 UPDATE classes SET teacher_id = 1 WHERE id = 1; -- John Smith est l'enseignant de Class A
 UPDATE classes SET teacher_id = 2 WHERE id = 2; -- Jane Doe est l'enseignante de Class B
+
+-- Ajout d'une colonne pour le montant total de la scolarité dans la table students
+ALTER TABLE students ADD COLUMN total_fees REAL DEFAULT 0;
+
+-- Table des paiements des étudiants (Student_Payments)
+CREATE TABLE IF NOT EXISTS student_payments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  student_id INTEGER NOT NULL,
+  payement_maker TEXT NOT NULL,
+  payment_date DATE NOT NULL,
+  amount_paid REAL NOT NULL,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
+-- Exemple d'insertion de paiements pour les étudiants
+INSERT INTO student_payments (title, student_id, payement_maker, payment_date, amount_paid)
+VALUES
+('Scolarité', 1, 'John Smith', '2023-02-01', 2500.00),
+('Scolarité', 2, 'Jane Doe', '2023-02-01', 2200.00),
+('Scolarité', 3, 'Tom Miller', '2023-02-01', 1800.00);
+
+-- Ajout de la gestion des paiements de salaires pour les employés
+-- Table des paiements des employés (Employee_Salaries)
+CREATE TABLE IF NOT EXISTS employee_salaries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  employee_id INTEGER NOT NULL,
+  salary_month TEXT NOT NULL,
+  salary_paid REAL NOT NULL,
+  payment_date DATE NOT NULL,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
+
+-- Exemple d'insertion de paiements de salaires pour les employés
+INSERT INTO employee_salaries (employee_id, salary_month, salary_paid, payment_date)
+VALUES
+(1, 'February', 2500.00, '2023-02-01'),
+(2, 'February', 2200.00, '2023-02-01'),
+(3, 'February', 1800.00, '2023-02-01');

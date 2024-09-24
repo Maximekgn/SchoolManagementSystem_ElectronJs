@@ -479,10 +479,15 @@ ipcMain.handle("update-employee", async (event, formData) => {
 
 
 
-
-
-
-
+/* ---------------- CLASSEs ----------------*/
+/* 
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  capacity INTEGER NOT NULL,
+  class_fees REAL NOT NULL,
+  teacher_id INTEGER,
+  FOREIGN KEY (teacher_id) REFERENCES employees(id) ON DELETE SET NULL
+*/
 //to get all classes
 ipcMain.handle("get-classes", (event, args) => {
   return new Promise((resolve, reject) => {
@@ -491,6 +496,119 @@ ipcMain.handle("get-classes", (event, args) => {
         reject(err);
       } else {
         resolve(rows);
+      }
+    });
+  });
+})
+
+// to add a new class
+ipcMain.handle("add-class", async (event, newClass) => {
+  return new Promise((resolve, reject) => {
+    const query = 'INSERT INTO classes (name, capacity, class_fees, teacher_id) VALUES (?, ?, ?, ?)';
+    const { name, capacity, class_fees, teacher_id } = newClass;
+    database.run(query, [name, capacity, class_fees, teacher_id], function(err) {
+      if (err) {
+        console.error('Error adding class:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, insertedId: this.lastID });
+      }
+    });
+  });
+})
+
+//to delete a class
+ipcMain.handle('delete-class', async (event, classId) => {
+  return new Promise((resolve, reject) => {
+    const query = 'DELETE FROM classes WHERE id = ?';
+    
+    database.run(query, [classId], function(err) {
+      if (err) {
+        console.error('Error deleting class:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        if (this.changes > 0) {
+          resolve({ success: true, message: 'Class deleted successfully' });
+        } else {
+          reject({ success: false, error: 'No class found with the given ID' });
+        }
+      }
+    });
+  });
+})
+
+// to update a class
+ipcMain.handle("update-class", async (event, formData) => {
+  try {
+    const query = `
+      UPDATE classes SET 
+        name = ?,
+        teacher_id = ?
+      WHERE id = ?
+    `; 
+    const { name, teacher_id, id } = formData;
+    return new Promise((resolve, reject) => {
+      database.run(query, [name, teacher_id, id], function(err) {
+        if (err) {
+          console.error("Error updating class:", err.message);
+          reject({ success: false, error: err.message });
+        } else {
+          resolve({ success: true, updatedId: this.lastID });
+        }
+      });
+    });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+
+})
+
+
+/* ----------------PAYEMENTS ----------------------*/
+/* 
+  student_payments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  student_id INTEGER NOT NULL,
+  payement_maker TEXT NOT NULL,
+  payment_date DATE NOT NULL,
+  amount_paid REAL NOT NULL,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+  employee_salaries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  employee_id INTEGER NOT NULL,
+  salary_month TEXT NOT NULL,
+  salary_paid REAL NOT NULL,
+  payment_date DATE NOT NULL,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+*/
+//add student payement 
+ipcMain.handle("add-student-payement", async (event, newPayement) => {
+  return new Promise((resolve, reject) => {
+    const query = 'INSERT INTO student_payments (title, student_id, payement_maker, payment_date, amount_paid) VALUES (?, ?, ?, ?, ?)';
+    const { title, student_id, payement_maker, payment_date, amount_paid } = newPayement;
+    database.run(query, [title, student_id, payement_maker, payment_date, amount_paid], function(err) {
+      if (err) {
+        console.error('Error adding student payement:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, insertedId: this.lastID });
+      }
+    });
+  });
+})
+
+//add employee payement 
+ipcMain.handle("add-employee-payement", async (event, newPayement) => {
+  return new Promise((resolve, reject) => {
+    const query = 'INSERT INTO employee_salaries (employee_id, salary_month, salary_paid, payment_date) VALUES (?, ?, ?, ?)';
+    const { employee_id, salary_month, salary_paid, payment_date } = newPayement;
+    database.run(query, [employee_id, salary_month, salary_paid, payment_date], function(err) {
+      if (err) {
+        console.error('Error adding employee payement:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, insertedId: this.lastID });
       }
     });
   });
