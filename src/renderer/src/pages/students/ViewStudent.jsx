@@ -103,6 +103,14 @@ const ViewStudent = ({ student, onClose }) => {
             <p className="text-sm font-medium text-gray-500">Previous School</p>
             <p className="mt-1 text-sm text-gray-900">{student.previous_school || 'N/A'}</p>
           </div>
+          <div>
+            <p>School Fees  {student.school_fees} </p>
+            <p>{student.school_fees}</p>
+          </div>
+          <div>
+            <p>Paid Fees  </p>
+            <p>{student.paid_fees}</p>
+          </div>
 
           {/* Health Information */}
           <div className="col-span-2">

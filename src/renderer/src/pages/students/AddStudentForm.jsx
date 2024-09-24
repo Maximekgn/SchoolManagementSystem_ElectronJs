@@ -2,10 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 const AddStudentForm = ({ onAdd, onClose }) => {
   const initialFormData = {
-    surname: '', name: '', dateOfBirth: '', placeOfBirth: 'unknown', gender: 'Male',
-    registrationNumber: 'unknown', dateOfAdmission: '', classId: '', bloodGroup: 'unknown',
-    medicalCondition: '', previousSchool: '', religion: 'unknown', parentName: '',
-    parentSurname: '', parentMobileNumber: ''
+    surname: '', 
+    name: '', 
+    dateOfBirth: new Date().toISOString().split('T')[0], 
+    placeOfBirth: 'unknown', 
+    gender: 'Male',
+    registrationNumber: 'unknown', 
+    dateOfAdmission: new Date().toISOString().split('T')[0], 
+    classId: '', 
+    discountInFees: 0, // Ajout de discountInFees
+    bloodGroup: 'unknown',
+    medicalCondition: '', 
+    previousSchool: '', 
+    religion: 'unknown', 
+    parentName: '',
+    parentSurname: '', 
+    parentMobileNumber: ''
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -55,15 +67,33 @@ const AddStudentForm = ({ onAdd, onClose }) => {
     if (validateForm()) {
       setIsSubmitting(true);
       try {
-        const studentData = Object.keys(formData).reduce((acc, key) => {
-          acc[key.replace(/([A-Z])/g, "_$1").toLowerCase()] = formData[key];
-          return acc;
-        }, {});
+        const studentData = {
+          ...formData,
+          // Ajout des valeurs par défaut
+          placeOfBirth: formData.placeOfBirth || 'unknown',
+          bloodGroup: formData.bloodGroup || 'unknown',
+          medicalCondition: formData.medicalCondition || '',
+          previousSchool: formData.previousSchool || '',
+          religion: formData.religion || 'unknown',
+          parentName: formData.parentName || '',
+          parentSurname: formData.parentSurname || '',
+          parentMobileNumber: formData.parentMobileNumber || ''
 
+        };
+        
+        // Ajouter school_fee en fonction des frais de classe
+        const selectedClass = classes.find(c => c.id === studentData.classId);
+        if (selectedClass) {
+          studentData.school_fee = selectedClass.class_fees;
+        } else {
+          studentData.school_fee = 0; // Si aucune classe sélectionnée, valeur par défaut
+        }
+        
         const result = await window.electron.ipcRenderer.invoke('add-student', studentData);
         if (result.id) {
           onAdd(result.id);
           setFormData(initialFormData);
+          onClose(); // Ferme la fenêtre après l'ajout
         } else {
           throw new Error('Failed to add student');
         }
@@ -125,7 +155,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
                 { value: 'Other', label: 'Other' }
               ])}
               {renderInput('registrationNumber', 'Registration Number')}
-              {renderInput('dateOfAdmission', 'Date of Admission', 'date')}
+              {renderInput('dateOfAdmission', 'Date of Admission', 'date') /* Valeur par défaut à la date actuelle */}
               {renderInput('classId', 'Class', 'select', [
                 { value: '', label: 'Select a class' },
                 ...classes.map(cls => ({ value: cls.id, label: cls.name }))
@@ -134,6 +164,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
               {renderInput('medicalCondition', 'Medical Condition')}
               {renderInput('previousSchool', 'Previous School')}
               {renderInput('religion', 'Religion')}
+              {renderInput('discountInFees', 'Discount in Fees', 'number')} {/* Ajout du champ discountInFees */}
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-4">Parent Information</h3>

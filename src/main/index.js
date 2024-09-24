@@ -183,6 +183,28 @@ ipcMain.handle("close", (event, args) => {
 });
 
 //---------------------STUDENTS-----------------------------
+/*
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  surname TEXT NOT NULL,
+  name TEXT NOT NULL,
+  date_of_birth DATE NOT NULL,
+  place_of_birth TEXT,
+  gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Other',
+  picture BLOB,
+  registration_number TEXT UNIQUE,
+  date_of_admission DATE NOT NULL,
+  class_id INTEGER,
+  discount_in_fee REAL DEFAULT 0,
+  blood_group TEXT ,
+  medical_condition TEXT,
+  previous_school TEXT,
+  religion TEXT,
+  additional_note TEXT,
+  parent_name TEXT,
+  parent_surname TEXT,
+  parent_mobile_number TEXT,
+  FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
+*/
 //get all students
 ipcMain.handle("get-students", (event, args) => {
   return new Promise((resolve, reject) => {
@@ -227,38 +249,45 @@ ipcMain.handle("get-students", (event, args) => {
 
 
 // add a student
-  ipcMain.handle("add-student", async (event, formData) => {
-    return new Promise((resolve, reject) => {
-      const query = `
-        INSERT INTO students (
-          surname, name, date_of_birth, place_of_birth, gender, 
-          registration_number, date_of_admission, class_id, blood_group, 
-          medical_condition, previous_school, religion, parent_name, 
-          parent_surname, parent_mobile_number
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  
-      const {
+ipcMain.handle("add-student", async (event, formData) => { 
+  return new Promise((resolve, reject) => {
+    const query = `
+      INSERT INTO students (
         surname, name, date_of_birth, place_of_birth, gender, 
-        registration_number, date_of_admission, class_id, blood_group, 
+        registration_number, date_of_admission, class_id, discount_in_fee, 
+        school_fee, paid_school_fee, blood_group, 
         medical_condition, previous_school, religion, parent_name, 
         parent_surname, parent_mobile_number
-      } = formData;
-  
-      database.run(query, [
-        surname, name, date_of_birth, place_of_birth, gender, 
-        registration_number, date_of_admission, class_id, blood_group, 
-        medical_condition, previous_school, religion, parent_name, 
-        parent_surname, parent_mobile_number
-      ], function(err) {
-        if (err) {
-          console.error("Error inserting student:", err.message);
-          reject(err); 
-        } else {
-          resolve({ id: this.lastID }); 
-        }
-      });
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+    const {
+      surname, name, date_of_birth, place_of_birth, gender, 
+      registration_number, date_of_admission, class_id, discount_inFees,
+      school_fee, paid_school_fee, blood_group, 
+      medical_condition, previous_school, religion, parent_name, 
+      parent_surname, parent_mobile_number
+    } = formData;
+
+    // Ajoutez une valeur par défaut pour paid_school_fee si elle n'est pas fournie
+    const paidSchoolFee = 0; // ou toute autre valeur par défaut que vous souhaitez
+
+    database.run(query, [
+      surname, name, date_of_birth, place_of_birth, gender, 
+      registration_number, date_of_admission, class_id, discount_inFees, 
+      school_fee, paidSchoolFee, blood_group, 
+      medical_condition, previous_school, religion, parent_name, 
+      parent_surname, parent_mobile_number
+    ], function(err) {
+      if (err) {
+        console.error("Error inserting student:", err.message);
+        reject(err); 
+      } else {
+        resolve({ id: this.lastID }); 
+      }
     });
   });
+});
+
 
 // update a student
 ipcMain.handle("update-student", async (event, formData) => {

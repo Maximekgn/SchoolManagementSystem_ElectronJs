@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS students (
   date_of_admission DATE NOT NULL,
   class_id INTEGER,
   discount_in_fee REAL DEFAULT 0,
+  school_fee REAL DEFAULT 0,
+  paid_school_fee REAL DEFAULT 0,
   blood_group TEXT ,
   medical_condition TEXT,
   previous_school TEXT,
