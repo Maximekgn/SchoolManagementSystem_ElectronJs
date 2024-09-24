@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 const AddStudentForm = ({ onAdd, onClose }) => {
-  const initialFormData = {
+  const initialFormData = useMemo(() => ({
     surname: '', 
     name: '', 
     dateOfBirth: new Date().toISOString().split('T')[0], 
@@ -10,7 +10,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
     registrationNumber: 'unknown', 
     dateOfAdmission: new Date().toISOString().split('T')[0], 
     classId: '', 
-    discountInFees: 0, // Ajout de discountInFees
+    discountInFees: 0,
     bloodGroup: 'unknown',
     medicalCondition: '', 
     previousSchool: '', 
@@ -18,7 +18,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
     parentName: '',
     parentSurname: '', 
     parentMobileNumber: ''
-  };
+  }), []);
 
   const [formData, setFormData] = useState(initialFormData);
   const [classes, setClasses] = useState([]);
@@ -69,7 +69,6 @@ const AddStudentForm = ({ onAdd, onClose }) => {
       try {
         const studentData = {
           ...formData,
-          // Ajout des valeurs par défaut
           placeOfBirth: formData.placeOfBirth || 'unknown',
           bloodGroup: formData.bloodGroup || 'unknown',
           medicalCondition: formData.medicalCondition || '',
@@ -78,22 +77,16 @@ const AddStudentForm = ({ onAdd, onClose }) => {
           parentName: formData.parentName || '',
           parentSurname: formData.parentSurname || '',
           parentMobileNumber: formData.parentMobileNumber || ''
-
         };
         
-        // Ajouter school_fee en fonction des frais de classe
         const selectedClass = classes.find(c => c.id === studentData.classId);
-        if (selectedClass) {
-          studentData.school_fee = selectedClass.class_fees;
-        } else {
-          studentData.school_fee = 0; // Si aucune classe sélectionnée, valeur par défaut
-        }
+        studentData.school_fee = selectedClass?.class_fees || 0;
         
         const result = await window.electron.ipcRenderer.invoke('add-student', studentData);
         if (result.id) {
           onAdd(result.id);
           setFormData(initialFormData);
-          onClose(); // Ferme la fenêtre après l'ajout
+          onClose(); 
         } else {
           throw new Error('Failed to add student');
         }
@@ -106,7 +99,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
     }
   };
 
-  const renderInput = (name, label, type = 'text', options = null) => (
+  const renderInput = useMemo(() => (name, label, type = 'text', options = null) => (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       {options ? (
@@ -135,7 +128,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
       )}
       {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
     </div>
-  );
+  ), [formData, errors, handleChange]);
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center p-4">
@@ -155,7 +148,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
                 { value: 'Other', label: 'Other' }
               ])}
               {renderInput('registrationNumber', 'Registration Number')}
-              {renderInput('dateOfAdmission', 'Date of Admission', 'date') /* Valeur par défaut à la date actuelle */}
+              {renderInput('dateOfAdmission', 'Date of Admission', 'date')}
               {renderInput('classId', 'Class', 'select', [
                 { value: '', label: 'Select a class' },
                 ...classes.map(cls => ({ value: cls.id, label: cls.name }))
@@ -164,7 +157,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
               {renderInput('medicalCondition', 'Medical Condition')}
               {renderInput('previousSchool', 'Previous School')}
               {renderInput('religion', 'Religion')}
-              {renderInput('discountInFees', 'Discount in Fees', 'number')} {/* Ajout du champ discountInFees */}
+              {renderInput('discountInFees', 'Discount in Fees', 'number')}
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-4">Parent Information</h3>

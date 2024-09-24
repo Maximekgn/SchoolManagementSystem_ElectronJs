@@ -260,13 +260,23 @@ ipcMain.handle("add-student", async (event, formData) => {
         parent_surname, parent_mobile_number
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    const {
-      surname, name, date_of_birth, place_of_birth, gender, 
-      registration_number, date_of_admission, class_id, discount_inFees,
-      school_fee, paid_school_fee, blood_group, 
-      medical_condition, previous_school, religion, parent_name, 
-      parent_surname, parent_mobile_number
-    } = formData;
+    const surname = formData.surname || '';
+    const name = formData.name || '';
+    const date_of_birth = formData.dateOfBirth || '';
+    const place_of_birth = formData.placeOfBirth || '';
+    const gender = formData.gender || '';
+    const registration_number = formData.registrationNumber || '';
+    const date_of_admission = formData.dateOfAdmission || '';
+    const class_id = formData.classId || '';
+    const discount_inFees = formData.discountInFees || 0;
+    const school_fee = formData.school_fee || 0;
+    const blood_group = formData.bloodGroup || '';
+    const medical_condition = formData.medicalCondition || '';
+    const previous_school = formData.previousSchool || '';
+    const religion = formData.religion || '';
+    const parent_name = formData.parentName || '';
+    const parent_surname = formData.parentSurname || '';
+    const parent_mobile_number = formData.parentMobileNumber || '';
 
     // Ajoutez une valeur par défaut pour paid_school_fee si elle n'est pas fournie
     const paidSchoolFee = 0; // ou toute autre valeur par défaut que vous souhaitez
