@@ -352,19 +352,24 @@ ipcMain.handle('delete-student', async (event, studentId) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+//----------------------EMPLOYEES----------------------
+/*id INTEGER PRIMARY KEY AUTOINCREMENT,
+  surname TEXT NOT NULL,
+  name TEXT NOT NULL,
+  date_of_birth DATE,
+  gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Male',
+  registration_number TEXT UNIQUE,
+  picture BLOB,
+  national_id TEXT UNIQUE,
+  mobile_number TEXT UNIQUE,
+  nationality TEXT,
+  date_of_joining DATE NOT NULL,
+  employee_role TEXT NOT NULL,
+  monthly_salary REAL DEFAULT 0,
+  experience TEXT,
+  religion TEXT,
+  email TEXT UNIQUE,
+  address TEXT*/
 
 //to get all employees
 ipcMain.handle("get-employees", (event, args) => {
@@ -391,6 +396,92 @@ ipcMain.handle("get-teachers", (event, args) => {
     });
   });
 })
+
+
+
+//to delete a employee
+ipcMain.handle('delete-employee', async (event, employeeId) => {
+  return new Promise((resolve, reject) => {
+    const query = 'DELETE FROM employees WHERE id = ?';
+    
+    database.run(query, [employeeId], function(err) {
+      if (err) {
+        console.error('Error deleting employee:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        if (this.changes > 0) {
+          resolve({ success: true, message: 'Employee deleted successfully' });
+        } else {
+          reject({ success: false, error: 'No employee found with the given ID' });
+        }
+      }
+    });
+  });
+})
+
+//to update an employee
+ipcMain.handle("update-employee", async (event, formData) => {
+  try {
+    let picturePath = null;
+    if (formData.picture) {
+      const fileName = `${formData.registration_number}_${Date.now()}${path.extname(formData.picture.path)}`;
+      const destPath = path.join(app.getPath('userData'), 'uploads', fileName);
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      await fs.copyFile(formData.picture.path, destPath);
+      picturePath = destPath;
+    }
+
+    const query = `
+      UPDATE employees SET 
+        surname = ?, 
+        name = ?, 
+        date_of_birth = ?, 
+        gender = ?,
+        registration_number = ?,
+        picture = ? ,
+        national_id = ?,
+        mobile_number = ?,
+        nationality = ?,
+        date_of_joining = ?,
+        employee_role = ?,
+        monthly_salary = ?,
+        experience = ?,
+        religion = ?,
+        email = ?,
+        address = ?
+      WHERE id = ?
+    `; 
+
+    const {
+      surname, name  , date_of_birth, gender , registration_number
+      , picture, national_id, mobile_number, nationality, date_of_joining, employee_role ,
+      monthly_salary, experience, religion, email, address, id
+      } = formData;
+
+    return new Promise((resolve, reject) => {
+      database.run(query, [
+        surname, name  , date_of_birth, gender , registration_number ,
+        picture, national_id, mobile_number, nationality, date_of_joining, employee_role ,
+        monthly_salary, experience, religion, email, address, id
+      ], function(err) {
+        if (err) {
+          console.error("Error updating employee:", err.message);
+          reject({ success: false, error: err.message });
+        } else {
+          resolve({ success: true, updatedId: this.lastID });
+        }
+      });
+    });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+
+
+
+
+
 
 //to get all classes
 ipcMain.handle("get-classes", (event, args) => {
