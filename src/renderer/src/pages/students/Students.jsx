@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { debounce } from 'lodash';
 import AddStudentForm from './AddStudentForm';
-import StudentDetails from './StudentDetails';  // Component to view details
-
-const StudentTable = ({ students, onSelectStudent, onDeleteStudent }) => (
+import ViewStudent from './ViewStudent';
+import StudentEdit from './EditStudent';
+const StudentTable = ({ students, onViewStudent, onEditStudent, onDeleteStudent }) => (
   <div className="bg-white shadow overflow-hidden sm:rounded-lg">
     <table className="min-w-full divide-y divide-gray-200">
       <thead className="bg-gray-50">
@@ -17,17 +17,22 @@ const StudentTable = ({ students, onSelectStudent, onDeleteStudent }) => (
       </thead>
       <tbody className="bg-white divide-y divide-gray-200">
         {students.map((student) => (
-          <tr key={student.student_id} className="hover:bg-gray-50 transition duration-150">
+          <tr key={student.id} className="hover:bg-gray-50 transition duration-150">
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.id}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.class_name}</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.parent_mobile_number || 'N/A'}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ">
-              <button onClick={() => onSelectStudent(student)} className="text-blue-600 hover:text-blue-900 transition duration-300">
-                View/edit
+            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <button onClick={() => onViewStudent(student)} className="text-blue-600 hover:text-blue-900 transition duration-300 mr-2">
+                View
               </button>
-              <button className='text-red-600 hover:text-red-900 mx-2' onClick={() => handleDelete(student.id, onDeleteStudent)}>Delete</button>
+              <button onClick={() => onEditStudent(student)} className="text-green-600 hover:text-green-900 transition duration-300 mr-2">
+                Edit
+              </button>
+              <button onClick={() => onDeleteStudent(student.id)} className="text-red-600 hover:text-red-900 transition duration-300">
+                Delete
+              </button>
             </td>
           </tr>
         ))}
@@ -37,60 +42,45 @@ const StudentTable = ({ students, onSelectStudent, onDeleteStudent }) => (
 );
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
-  <div className="mt-4 flex justify-center">
-    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-      <button
-        key={page}
-        onClick={() => onPageChange(page)}
-        className={`mx-1 px-3 py-1 rounded ${currentPage === page ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
-      >
-        {page}
-      </button>
-    ))}
+  <div className="flex justify-center mt-4">
+    <button
+      onClick={() => onPageChange(currentPage - 1)}
+      disabled={currentPage === 1}
+      className="px-3 py-1 bg-gray-200 rounded mr-2"
+    >
+      Previous
+    </button>
+    <span>{currentPage} of {totalPages}</span>
+    <button
+      onClick={() => onPageChange(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      className="px-3 py-1 bg-gray-200 rounded ml-2"
+    >
+      Next
+    </button>
   </div>
 );
-
-const handleDelete = async (id, onDeleteStudent) => {
-  const confirmDelete = window.confirm('Are you sure you want to delete this student?');
-  if (!confirmDelete) return;
-
-  try {
-    const result = await window.electron.ipcRenderer.invoke('delete-student', id);
-    if (result.success) {
-      onDeleteStudent();
-    } else {
-      throw new Error(result.error);
-    }
-  } catch (error) {
-    console.error('Error deleting student:', error);
-    setError(error.message || 'Failed to delete student. Please try again.');
-  }
-};
 
 const Students = () => {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10;
 
-  // Fetch students from the backend
+  // Fetch students from the API
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
-      const students = await window.electron.ipcRenderer.invoke('get-students');
-      if (students) {
-        setStudents(students);
-        setError(null);
-      } else {
-        setError('No students found.');
-      }
-    } catch (err) {
-      console.error('Error fetching students:', err);
-      setError('Failed to load students. Please try again later.');
+      const response = await window.electron.ipcRenderer.invoke('get-students');
+      setStudents(response);
+    } catch (error) {
+      setError('Failed to fetch students. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -100,52 +90,63 @@ const Students = () => {
     fetchStudents();
   }, [fetchStudents]);
 
-  // Handle adding a student
-  const handleAddStudent = async () => {
-    await fetchStudents();
-    setIsAdding(false);
+  const handleAddStudent = async (newStudent) => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke('add-student', newStudent);
+      if (result.success) {
+        await fetchStudents();
+        setIsAdding(false);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setError('Failed to add student. Please try again.');
+    }
   };
 
-  // Debounced search
-  const debouncedSearch = useMemo(() => debounce((term) => setSearchTerm(term), 300), []);
-  useEffect(() => () => debouncedSearch.cancel(), [debouncedSearch]);
+  const handleDeleteStudent = async (id) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this student?');
+    if (!confirmDelete) return;
 
-  const handleSearchChange = (e) => {
-    debouncedSearch(e.target.value);
+    try {
+      const result = await window.electron.ipcRenderer.invoke('delete-student', id);
+      if (result.success) {
+        await fetchStudents();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      setError('Failed to delete student. Please try again.');
+    }
   };
 
-  // Filter students based on search term
+  const handleSearchChange = useMemo(() => debounce((e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on new search
+  }, 300), []);
+
+  const handleViewStudent = (student) => {
+    setSelectedStudent(student);
+    setIsViewing(true);
+  };
+
+  const handleEditStudent = (student) => {
+    setSelectedStudent(student);
+    setIsEditing(true);
+  };
+
   const filteredStudents = useMemo(() => {
-    return students.filter(student => {
-      const fullName = `${student.name} ${student.surname}`.toLowerCase();
-      return fullName.includes(searchTerm.toLowerCase());
-    });
+    return students.filter((student) =>
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.surname.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   }, [students, searchTerm]);
 
-  // Pagination logic
-  const paginatedStudents = useMemo(() => {
-    const startIndex = (currentPage - 1) * studentsPerPage;
-    return filteredStudents.slice(startIndex, startIndex + studentsPerPage);
-  }, [filteredStudents, currentPage]);
-
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
-
-  useEffect(() => {
-    // Reset page number if filtering changes the number of students
-    if (currentPage > totalPages) {
-      setCurrentPage(1);
-    }
-  }, [filteredStudents, totalPages, currentPage]);
-
-  // Handle loading state
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div></div>;
-  }
-
-  // Handle error state
-  if (error) {
-    return <div className="text-center mt-8 text-red-500 text-xl">{error}</div>;
-  }
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * studentsPerPage;
+    return filteredStudents.slice(start, start + studentsPerPage);
+  }, [filteredStudents, currentPage, studentsPerPage]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -163,19 +164,40 @@ const Students = () => {
         />
       </div>
 
-      {filteredStudents.length > 0 ? (
+      {isLoading ? (
+        <div className="text-center text-gray-500">Loading students...</div>
+      ) : filteredStudents.length > 0 ? (
         <>
-          <StudentTable students={paginatedStudents} onSelectStudent={setSelectedStudent} onDeleteStudent={fetchStudents} />
+          <StudentTable
+            students={paginatedStudents}
+            onViewStudent={handleViewStudent}
+            onEditStudent={handleEditStudent}
+            onDeleteStudent={handleDeleteStudent}
+          />
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </>
       ) : (
         <div className="text-center text-gray-500">No students found.</div>
       )}
 
-      {selectedStudent && (
-        <StudentDetails
+      {isViewing && (
+        <ViewStudent
           student={selectedStudent}
-          onClose={() => setSelectedStudent(null)}
+          onClose={() => {
+            setSelectedStudent(null);
+            setIsViewing(false);
+          }}
+        />
+      )}
+
+      {isEditing && (
+        <StudentEdit
+          student={selectedStudent}
+          onClose={() => {
+            setSelectedStudent(null);
+            setIsEditing(false);
+          }}
+          onUpdate={fetchStudents}
         />
       )}
 
@@ -184,6 +206,8 @@ const Students = () => {
           <AddStudentForm onAdd={handleAddStudent} onClose={() => setIsAdding(false)} />
         </React.Suspense>
       )}
+
+      {error && <div className="text-red-500 mt-4">{error}</div>}
     </div>
   );
 };
