@@ -1,37 +1,40 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 const AddStudentForm = ({ onAdd, onClose }) => {
-  const initialFormData = useMemo(() => ({
-    surname: '', 
-    name: '', 
-    dateOfBirth: new Date().toISOString().split('T')[0], 
-    placeOfBirth: 'unknown', 
+  const [formData, setFormData] = useState({
+    surname: '',
+    name: '',
+    dateOfBirth: new Date().toISOString().split('T')[0],
+    placeOfBirth: 'unknown',
     gender: 'Male',
-    registrationNumber: 'unknown', 
-    dateOfAdmission: new Date().toISOString().split('T')[0], 
-    classId: '', 
+    registrationNumber: '',
+    dateOfAdmission: new Date().toISOString().split('T')[0],
+    classId: '',
     discountInFees: 0,
     bloodGroup: 'unknown',
-    medicalCondition: '', 
-    previousSchool: '', 
-    religion: 'unknown', 
+    medicalCondition: '',
+    previousSchool: '',
+    religion: 'unknown',
     parentName: '',
-    parentSurname: '', 
+    parentSurname: '',
     parentMobileNumber: ''
-  }), []);
+  });
 
-  const [formData, setFormData] = useState(initialFormData);
   const [classes, setClasses] = useState([]);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch available classes from the server
   const fetchClasses = useCallback(async () => {
     try {
       const response = await window.electron.ipcRenderer.invoke('get-classes');
       setClasses(response);
     } catch (error) {
       console.error('Error fetching classes:', error);
-      setErrors(prev => ({ ...prev, fetchClasses: 'Failed to fetch classes. Please try again.' }));
+      setErrors(prev => ({
+        ...prev,
+        fetchClasses: 'Failed to fetch classes. Please try again.'
+      }));
     }
   }, []);
 
@@ -39,67 +42,89 @@ const AddStudentForm = ({ onAdd, onClose }) => {
     fetchClasses();
   }, [fetchClasses]);
 
-  const handleChange = (e) => {
+  // Handle input change
+  const handleChange = useCallback((e) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
+      [name]: type === 'number' ? (value === '' ? 0 : parseFloat(value)) : value
     }));
     setErrors(prev => ({ ...prev, [name]: '', submit: '' }));
-  };
+  }, []);
 
-  const validateForm = () => {
+  // Form validation
+  const validateForm = useCallback(() => {
     const newErrors = {};
     const requiredFields = ['name', 'surname', 'classId', 'registrationNumber'];
-    
+
     requiredFields.forEach(field => {
-      if (!formData[field].trim()) {
-        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+      if (!formData[field].toString().trim()) {
+        newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
       }
     });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData]);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
     if (validateForm()) {
       setIsSubmitting(true);
+  
       try {
-        const studentData = {
-          ...formData,
-          placeOfBirth: formData.placeOfBirth || 'unknown',
-          bloodGroup: formData.bloodGroup || 'unknown',
-          medicalCondition: formData.medicalCondition || '',
-          previousSchool: formData.previousSchool || '',
-          religion: formData.religion || 'unknown',
-          parentName: formData.parentName || '',
-          parentSurname: formData.parentSurname || '',
-          parentMobileNumber: formData.parentMobileNumber || ''
-        };
-        
-        const selectedClass = classes.find(c => c.id === studentData.classId);
-        studentData.school_fee = selectedClass?.class_fees || 0;
-        
-        const result = await window.electron.ipcRenderer.invoke('add-student', studentData);
-        if (result.id) {
-          onAdd(result.id);
-          setFormData(initialFormData);
-          onClose(); 
-        } else {
-          throw new Error('Failed to add student');
+        console.log('formData.classId:', formData.classId);  // Vérifiez ce qui est sélectionné
+        console.log('Available classes:', classes);  // Vérifiez si les classes sont correctement chargées
+  
+        // Trouver la classe correspondante
+        const selectedClass = classes.find(cls => cls.id == formData.classId);
+  
+        // Vérifier si la classe existe avant d'accéder à school_fee
+        if (!selectedClass) {
+          throw new Error('The selected class was not found.');
+        } else 
+        { console.log('selectedClass:', selectedClass);
         }
+  
+        const school_fee = Number(selectedClass.class_fees) - Number(formData.discountInFees);
+  
+        // Créer un nouvel objet incluant school_fee
+        const updatedFormData = {
+          ...formData,
+          school_fee: school_fee  // Ajouter school_fee calculé à formData
+        };
+  
+        console.log(updatedFormData);  // Debugging pour s'assurer que school_fee est inclus
+  
+        // Envoyer les données du formulaire mises à jour au backend
+        const result = await window.electron.ipcRenderer.invoke('add-student', updatedFormData);
+  
+        if (result && result.success) {
+          onAdd(result);  // Appeler la fonction onAdd pour mettre à jour le composant parent
+          onClose();  // Fermer le formulaire après la soumission
+        } else {
+          throw new Error(result.error || 'Failed to add student');
+        }
+  
       } catch (error) {
         console.error('Error adding student:', error);
-        setErrors(prev => ({ ...prev, submit: 'Failed to add student. Please try again.' }));
+        setErrors(prev => ({
+          ...prev,
+          submit: error.message || 'Failed to add student. Please try again.'
+        }));
       } finally {
         setIsSubmitting(false);
       }
     }
   };
+  
+  
+  
 
-  const renderInput = useMemo(() => (name, label, type = 'text', options = null) => (
+  // Helper function to render inputs
+  const renderInput = (name, label, type = 'text', options = null) => (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       {options ? (
@@ -128,7 +153,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
       )}
       {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
     </div>
-  ), [formData, errors, handleChange]);
+  );
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full flex items-center justify-center p-4">
@@ -168,16 +193,16 @@ const AddStudentForm = ({ onAdd, onClose }) => {
           </div>
           {errors.submit && <p className="text-red-500 text-sm mt-2">{errors.submit}</p>}
           <div className="flex justify-end space-x-4 mt-8">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
               disabled={isSubmitting}
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className={`px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isSubmitting}
             >

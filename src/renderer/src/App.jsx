@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Students from './pages/students/Students';
 import Employees from './pages/employees/Employees';
 import Payment from './pages//payment/Payment';
-import Settings from './pages/Settings';
+import Settings from './pages/settings/Settings';
 import { FiMenu } from 'react-icons/fi';
 import Classes from './pages/classes/Classes';
 

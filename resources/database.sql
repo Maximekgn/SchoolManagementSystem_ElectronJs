@@ -3,16 +3,14 @@ CREATE TABLE IF NOT EXISTS classes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   capacity INTEGER NOT NULL,
-  class_fees REAL NOT NULL,
-  teacher_id INTEGER,
-  FOREIGN KEY (teacher_id) REFERENCES employees(id) ON DELETE SET NULL
+  class_fees REAL NOT NULL
 );
 
-INSERT INTO classes (name, capacity, class_fees, teacher_id)
+INSERT INTO classes (name, capacity, class_fees)
 VALUES 
-('Class A', 30, 500.00, NULL),
-('Class B', 25, 450.00, NULL),
-('Class C', 35, 550.00, NULL);
+('Class A', 30, 500.00),
+('Class B', 25, 450.00),
+('Class C', 35, 550.00);
 
 
 -- Table des étudiants (Students)
@@ -56,17 +54,17 @@ CREATE TABLE IF NOT EXISTS employees (
   name TEXT NOT NULL,
   date_of_birth DATE,
   gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Male',
-  registration_number TEXT UNIQUE,
+  registration_number TEXT ,
   picture BLOB,
-  national_id TEXT UNIQUE,
-  mobile_number TEXT UNIQUE,
+  national_id TEXT ,
+  mobile_number TEXT ,
   nationality TEXT,
   date_of_joining DATE NOT NULL,
   employee_role TEXT NOT NULL,
   monthly_salary REAL DEFAULT 0,
   experience TEXT,
   religion TEXT,
-  email TEXT UNIQUE,
+  email TEXT ,
   address TEXT
 );
 
@@ -76,8 +74,6 @@ VALUES
 ('Doe', 'Jane', '1985-08-22', 'Female', 'EMP002', 'NI987654321', '0987654321', 'American', '2015-01-15', 'Teacher', 2200.00, '5 years', 'Atheist', 'jane.doe@example.com', '456 Maple St, New York'),
 ('Miller', 'Tom', '1990-11-12', 'Male', 'EMP003', 'NI112233445', '1122334455', 'Canadian', '2018-05-10', 'Admin', 1800.00, '3 years', 'Muslim', 'tom.miller@example.com', '789 Pine St, Toronto');
 
-UPDATE classes SET teacher_id = 1 WHERE id = 1; -- John Smith est l'enseignant de Class A
-UPDATE classes SET teacher_id = 2 WHERE id = 2; -- Jane Doe est l'enseignante de Class B
 
 -- Ajout d'une colonne pour le montant total de la scolarité dans la table students
 ALTER TABLE students ADD COLUMN total_fees REAL DEFAULT 0;

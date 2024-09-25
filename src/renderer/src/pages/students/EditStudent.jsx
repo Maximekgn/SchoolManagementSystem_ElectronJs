@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
-const StudentEdit = ({ student, onClose , onSave }) => {
+const StudentEdit = ({ student, onClose, onSave }) => {
   const [editedStudent, setEditedStudent] = useState({ ...student });
   const [classes, setClasses] = useState([]);
 
@@ -8,24 +8,24 @@ const StudentEdit = ({ student, onClose , onSave }) => {
     fetchClasses();
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setEditedStudent((prev) => ({
       ...prev,
       [name]: value,
     }));
-  };
+  }, []);
 
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     try {
       const response = await window.electron.ipcRenderer.invoke('get-classes');
       setClasses(response);
     } catch (error) {
       console.error('Error fetching classes:', error);
     }
-  };
+  }, []);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     const updatedStudent = {
       ...editedStudent,
       class_id: getClassId(editedStudent.class_name),
@@ -34,12 +34,12 @@ const StudentEdit = ({ student, onClose , onSave }) => {
     console.log('Updated student:', updatedStudent);
     window.electron.ipcRenderer.invoke('update-student', updatedStudent);
     onClose();
-  };
+  }, [editedStudent, onClose]);
 
-  const getClassId = (className) => {
+  const getClassId = useCallback((className) => {
     const selectedClass = classes.find((classe) => classe.name === className);
     return selectedClass ? selectedClass.id : null;
-  };
+  }, [classes]);
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center p-4">

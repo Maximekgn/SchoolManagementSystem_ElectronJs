@@ -3,6 +3,7 @@ import { debounce } from 'lodash';
 import AddStudentForm from './AddStudentForm';
 import ViewStudent from './ViewStudent';
 import StudentEdit from './EditStudent';
+
 const StudentTable = ({ students, onViewStudent, onEditStudent, onDeleteStudent }) => (
   <div className="bg-white shadow overflow-hidden sm:rounded-lg">
     <table className="min-w-full divide-y divide-gray-200">
@@ -46,15 +47,15 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => (
     <button
       onClick={() => onPageChange(currentPage - 1)}
       disabled={currentPage === 1}
-      className="px-3 py-1 bg-gray-200 rounded mr-2"
+      className="px-3 py-1 bg-gray-200 rounded mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       Previous
     </button>
-    <span>{currentPage} of {totalPages}</span>
+    <span className="px-3 py-1">{currentPage} of {totalPages}</span>
     <button
       onClick={() => onPageChange(currentPage + 1)}
       disabled={currentPage === totalPages}
-      className="px-3 py-1 bg-gray-200 rounded ml-2"
+      className="px-3 py-1 bg-gray-200 rounded ml-2 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       Next
     </button>
@@ -73,12 +74,12 @@ const Students = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10;
 
-  // Fetch students from the API
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await window.electron.ipcRenderer.invoke('get-students');
       setStudents(response);
+      setError(null);
     } catch (error) {
       setError('Failed to fetch students. Please try again.');
     } finally {
@@ -96,17 +97,18 @@ const Students = () => {
       if (result.success) {
         await fetchStudents();
         setIsAdding(false);
+        setError(null);
       } else {
-        throw new Error(result.error);
+        await fetchStudents();
+        return { success: false, error: result.error || "Failed to add student" };
       }
     } catch (error) {
-      setError('Failed to add student. Please try again.');
+      await fetchStudents();
+      return { success: false, error: "An unexpected error occurred" };
     }
   };
 
   const handleDeleteStudent = async (id) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this student?');
-    if (!confirmDelete) return;
 
     try {
       const result = await window.electron.ipcRenderer.invoke('delete-student', id);
@@ -120,10 +122,13 @@ const Students = () => {
     }
   };
 
-  const handleSearchChange = useMemo(() => debounce((e) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
-  }, 300), []);
+  const handleSearchChange = useCallback(
+    debounce((e) => {
+      setSearchTerm(e.target.value);
+      setCurrentPage(1);
+    }, 300),
+    []
+  );
 
   const handleViewStudent = (student) => {
     setSelectedStudent(student);
@@ -133,13 +138,16 @@ const Students = () => {
   const handleEditStudent = (student) => {
     setSelectedStudent(student);
     setIsEditing(true);
-    fetchStudents();
+  };
+
+  const handleUpdateStudent = async () => {
+    await fetchStudents();
+    setIsEditing(false);
   };
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.surname.toLowerCase().includes(searchTerm.toLowerCase())
+      `${student.name} ${student.surname}`.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [students, searchTerm]);
 
@@ -147,7 +155,7 @@ const Students = () => {
   const paginatedStudents = useMemo(() => {
     const start = (currentPage - 1) * studentsPerPage;
     return filteredStudents.slice(start, start + studentsPerPage);
-  }, [filteredStudents, currentPage, studentsPerPage]);
+  }, [filteredStudents, currentPage]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -198,7 +206,7 @@ const Students = () => {
             setSelectedStudent(null);
             setIsEditing(false);
           }}
-          onUpdate={fetchStudents}
+          onUpdate={handleUpdateStudent}
         />
       )}
 

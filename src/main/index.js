@@ -228,6 +228,8 @@ ipcMain.handle("get-students", (event, args) => {
         students.parent_name, 
         students.parent_surname, 
         students.parent_mobile_number,
+        students.school_fee,
+        students.paid_school_fee,
         classes.name AS class_name, 
         classes.capacity, 
         classes.class_fees
@@ -246,52 +248,59 @@ ipcMain.handle("get-students", (event, args) => {
   });
 });
 
-
-
-ipcMain.handle("add-student", async (event, formData) => { 
-  const {
-    surname = '',
-    name = '',
-    dateOfBirth = '',
-    placeOfBirth = '',
-    gender = '', 
-    registrationNumber = '',
-    dateOfAdmission = '', 
-    classId = '',
-    discountInFees = 0,
-    school_fee = 0,
-    bloodGroup = '',
-    medicalCondition = '',
-    previousSchool = '',
-    religion = '',
-    parentName = '',
-    parentSurname = '',
-    parentMobileNumber = ''
-  } = formData;
-
-  const paidSchoolFee = 0; // Valeur par défaut pour paid_school_fee
+//add a student 
+ipcMain.handle("add-student", async (event, formData) => 
+{
+  const requiredFields = ['surname', 'name', 'dateOfBirth', 'registrationNumber', 'classId'];
+  const values = [
+    'surname', 'name', 'dateOfBirth', 'placeOfBirth', 'gender',
+    'registrationNumber', 'dateOfAdmission', 'classId', 'discountInFees',
+    'school_fee', 0, 'bloodGroup',
+    'medicalCondition', 'previousSchool', 'religion', 'parentName',
+    'parentSurname', 'parentMobileNumber'
+  ].map(field => formData[field] || '');
 
   const query = `
     INSERT INTO students (
-      surname, name, date_of_birth, place_of_birth, gender, 
-      registration_number, date_of_admission, class_id, discount_in_fee, 
-      school_fee, paid_school_fee, blood_group, 
-      medical_condition, previous_school, religion, parent_name, 
+      surname, name, date_of_birth, place_of_birth, gender,
+      registration_number, date_of_admission, class_id, discount_in_fee,
+      school_fee, paid_school_fee, blood_group,
+      medical_condition, previous_school, religion, parent_name,
       parent_surname, parent_mobile_number
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (${values.map(() => '?').join(', ')})
+  `;
 
   try {
-    await database.run(query, [
-      surname, name, dateOfBirth, placeOfBirth, gender,
-      registrationNumber, dateOfAdmission, classId, discountInFees,
-      school_fee, paidSchoolFee, bloodGroup,
-      medicalCondition, previousSchool, religion, parentName,
-      parentSurname, parentMobileNumber
-    ]);
-    return { id: database.lastID };
+    // Vérification des champs obligatoires
+    requiredFields.forEach(field => {
+      if (!formData[field]) throw new Error(`Le champ ${field} est obligatoire.`);
+    });
+
+    // Validations supplémentaires
+    if (isNaN(Date.parse(formData.dateOfBirth))) {
+      throw new Error('La date de naissance n\'est pas valide.');
+    }
+
+    if (isNaN(Number(formData.school_fee)) || Number(formData.school_fee) < 0) {
+      throw new Error('Les frais de scolarité doivent être un nombre positif.');
+    }
+
+    await database.run(query, values);
+
+    // Récupérer l'ID du dernier étudiant inséré
+    const lastInsertIdQuery = "SELECT last_insert_rowid() as lastId";
+    const lastInsertResult = await database.get(lastInsertIdQuery);
+
+    if (lastInsertResult && lastInsertResult.lastId) {
+      console.log("Étudiant ajouté avec succès. ID:", lastInsertResult.lastId);
+      return { success: true, message: "Étudiant ajouté avec succès.", studentId: lastInsertResult.lastId };
+    } else {
+      console.warn("L'insertion a été effectuée, mais l'ID n'a pas pu être récupéré.");
+      return { success: true, message: "Étudiant ajouté avec succès, mais sans confirmation d'ID." };
+    }
   } catch (err) {
-    console.error("Error inserting student:", err.message);
-    throw err;
+    console.error("Erreur lors de l'insertion de l'étudiant:", err.message);
+    return { success: false, error: err.message };
   }
 });
 
@@ -371,7 +380,7 @@ ipcMain.handle("update-student", async (event, formData) => {
 ipcMain.handle('delete-student', async (event, studentId) => {
   return new Promise((resolve, reject) => {
     const query = 'DELETE FROM students WHERE id = ?';
-    
+
     database.run(query, [studentId], function(err) {
       if (err) {
         console.error('Error deleting student:', err.message);
@@ -649,3 +658,78 @@ ipcMain.handle("add-employee-payement", async (event, newPayement) => {
     });
   });
 })
+
+
+
+
+
+
+
+
+
+// Handle database reset
+ipcMain.handle('reset-database', async () => {
+  try {
+    const dbPath = path.join(__dirname, '../../resources/database.db');
+    const sqlFilePath = path.join(__dirname, '../../resources/database.sql');
+
+    // Open the existing database connection
+    const db = new sqlite.Database(dbPath);
+
+    return new Promise((resolve, reject) => {
+      // Read the SQL schema file
+      const sql = fs.readFileSync(sqlFilePath, 'utf8');
+
+      db.serialize(() => {
+        // Disable foreign keys
+        db.exec("PRAGMA foreign_keys = OFF;", (err) => {
+          if (err) {
+            db.close();  // Ensure the database is closed on error
+            return reject(`Failed to disable foreign keys: ${err.message}`);
+          }
+
+          // Drop all existing tables
+          db.all("SELECT name FROM sqlite_master WHERE type='table';", (err, tables) => {
+            if (err) {
+              db.close();  // Ensure the database is closed on error
+              return reject(`Error fetching tables: ${err.message}`);
+            }
+
+            const dropTablePromises = tables
+              .filter(table => table.name !== 'sqlite_sequence')
+              .map(table => new Promise((resolve, reject) => {
+                db.run(`DROP TABLE IF EXISTS ${table.name}`, (err) => {
+                  if (err) {
+                    reject(`Failed to drop table ${table.name}: ${err.message}`);
+                  } else {
+                    resolve();
+                  }
+                });
+              }));
+
+            // Wait for all drop table promises to complete
+            Promise.all(dropTablePromises)
+              .then(() => {
+                // Recreate the database structure from SQL file
+                db.exec(sql, (err) => {
+                  if (err) {
+                    return reject(`Failed to recreate the database structure: ${err.message}`);
+                  } else {
+                    resolve('Database reset successfully');
+                  }
+                });
+              })
+              .catch(err => {
+                reject(err);
+              })
+              .finally(() => {
+                db.close();  // Always close the database when finished
+              });
+          });
+        });
+      });
+    });
+  } catch (err) {
+    return `Error resetting the database: ${err.message}`;
+  }
+});

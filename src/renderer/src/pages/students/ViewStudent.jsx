@@ -1,26 +1,26 @@
-import React, { useEffect , useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 const ViewStudent = ({ student, onClose }) => {
-  const [classes, setClasses] = useState([]);
-  const formatDate = (dateString) => {
+
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
+  }, []);
 
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     try {
       const response = await window.electron.ipcRenderer.invoke('get-classes');
       setClasses(response);
     } catch (error) {
       console.error('Error fetching classes:', error);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    console.log(student)
-    fetchClasses();
-  }, []);
+    console.log(student);
+  }, [fetchClasses, student]);
+
   // Close on 'Esc' key press
   useEffect(() => {
     const handleEsc = (event) => {
@@ -33,18 +33,18 @@ const ViewStudent = ({ student, onClose }) => {
   }, [onClose]);
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
-      role="dialog" 
-      aria-labelledby="student-details-title" 
+      role="dialog"
+      aria-labelledby="student-details-title"
       aria-modal="true"
     >
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 sm:scale-100">
         <div className="flex justify-between items-center mb-6">
           <h2 id="student-details-title" className="text-2xl font-bold text-gray-800">Student Details</h2>
-          <button 
-            onClick={onClose} 
-            className="text-gray-600 hover:text-gray-800" 
+          <button
+            onClick={onClose}
+            className="text-gray-600 hover:text-gray-800"
             aria-label="Close student details"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +52,7 @@ const ViewStudent = ({ student, onClose }) => {
             </svg>
           </button>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-6">
           {/* Personal Information */}
           <div className="col-span-2">
@@ -82,7 +82,7 @@ const ViewStudent = ({ student, onClose }) => {
             <p className="text-sm font-medium text-gray-500">Religion</p>
             <p className="mt-1 text-sm text-gray-900">{student.religion || 'N/A'}</p>
           </div>
-          
+
           {/* Academic Information */}
           <div className="col-span-2">
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Academic Information</h3>
@@ -104,12 +104,12 @@ const ViewStudent = ({ student, onClose }) => {
             <p className="mt-1 text-sm text-gray-900">{student.previous_school || 'N/A'}</p>
           </div>
           <div>
-            <p>School Fees  {student.school_fees} </p>
-            <p>{student.school_fees}</p>
+            <p className="text-sm font-medium text-gray-500">School Fees</p>
+            <p className="mt-1 text-sm text-gray-900">{student.school_fee}</p>
           </div>
           <div>
-            <p>Paid Fees  </p>
-            <p>{student.paid_fees}</p>
+            <p className="text-sm font-medium text-gray-500">Paid Fees</p>
+            <p className="mt-1 text-sm text-gray-900">{student.paid_school_fee}</p>
           </div>
 
           {/* Health Information */}

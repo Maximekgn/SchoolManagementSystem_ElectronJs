@@ -8,6 +8,7 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
     { name: 'employees', icon: FiBriefcase, label: 'Employees' },
     { name: 'payments', icon: FiDollarSign, label: 'Payments' },
     { name: 'classes', icon: FiBriefcase, label: 'Classes' },
+    { name: 'settings', icon: FiSettings, label: 'Settings' },
   ];
 
   return (
