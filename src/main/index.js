@@ -522,6 +522,52 @@ ipcMain.handle("update-employee", async (event, formData) => {
   }
 });
 
+//to add a new employee
+ipcMain.handle("add-employee", async (event, newEmployee) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // newEmployee est maintenant un objet normal, donc pas besoin d'utiliser FormData
+      console.log("Received employee data:", newEmployee); // Debugging pour voir les données reçues
+
+      // Gérer l'image si elle existe
+      if (newEmployee.picture) {
+        // Assurez-vous que vous recevez un chemin d'image ou des données binaires
+        const picturePath = path.join(__dirname, "uploads", `${Date.now()}_${newEmployee.picture.name}`);
+        
+        fs.writeFile(picturePath, newEmployee.picture, (err) => {
+          if (err) {
+            console.error("Error saving picture:", err);
+            return reject("Failed to save employee picture.");
+          }
+          newEmployee.picture = picturePath; // Mettre à jour le chemin de l'image
+        });
+      }
+
+      // Simuler l'ajout de l'employé à une base de données
+      const db = []; // Ceci est un exemple, dans un vrai projet vous utiliserez une vraie base de données
+      db.push(newEmployee); // Ajoutez l'employé à la "base de données"
+
+      // Retourner une réponse de succès avec l'ID de l'employé (ou un autre identifiant)
+      resolve({ id: Date.now(), message: "Employee added successfully" });
+    } catch (error) {
+      console.error("Error adding employee:", error);
+      reject("Failed to add employee. Please try again.");
+    }
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* ---------------- CLASSEs ----------------*/

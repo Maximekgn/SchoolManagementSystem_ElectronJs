@@ -109,7 +109,7 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Paid Fees</p>
-            <p className="mt-1 text-sm text-gray-900">{student.paid_school_fee}</p>
+            <p className="mt-1 text-sm text-gray-900">{student.paid_school_fee || 0}</p>
           </div>
 
           {/* Health Information */}
