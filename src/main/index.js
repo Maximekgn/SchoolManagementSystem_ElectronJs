@@ -251,7 +251,7 @@ ipcMain.handle("get-students", (event, args) => {
 //add a student 
 ipcMain.handle("add-student", async (event, formData) => 
 {
-  const requiredFields = ['surname', 'name', 'dateOfBirth', 'registrationNumber', 'classId'];
+  const requiredFields = [ 'name', 'dateOfBirth', 'registrationNumber', 'classId'];
   const values = [
     'surname', 'name', 'dateOfBirth', 'placeOfBirth', 'gender',
     'registrationNumber', 'dateOfAdmission', 'classId', 'discountInFees',
@@ -526,45 +526,53 @@ ipcMain.handle("update-employee", async (event, formData) => {
 ipcMain.handle("add-employee", async (event, newEmployee) => {
   return new Promise((resolve, reject) => {
     try {
-      // newEmployee est maintenant un objet normal, donc pas besoin d'utiliser FormData
-      console.log("Received employee data:", newEmployee); // Debugging pour voir les données reçues
+      console.log("Received employee data:", newEmployee);
 
       // Gérer l'image si elle existe
+      let pictureData = null;
       if (newEmployee.picture) {
-        // Assurez-vous que vous recevez un chemin d'image ou des données binaires
         const picturePath = path.join(__dirname, "uploads", `${Date.now()}_${newEmployee.picture.name}`);
         
-        fs.writeFile(picturePath, newEmployee.picture, (err) => {
-          if (err) {
-            console.error("Error saving picture:", err);
-            return reject("Failed to save employee picture.");
-          }
-          newEmployee.picture = picturePath; // Mettre à jour le chemin de l'image
-        });
+        // Enregistrer l'image sur le disque
+        fs.writeFileSync(picturePath, newEmployee.picture); // Sauvegarde l'image
+        pictureData = fs.readFileSync(picturePath); // Lis le fichier pour l'insérer dans la BDD en tant que BLOB
       }
 
-      // Simuler l'ajout de l'employé à une base de données
-      const db = []; // Ceci est un exemple, dans un vrai projet vous utiliserez une vraie base de données
-      db.push(newEmployee); // Ajoutez l'employé à la "base de données"
+      // Insérer les données de l'employé dans SQLite
+      const insertQuery = `
+        INSERT INTO employees (
+          surname, name, date_of_birth, gender, registration_number, picture, national_id, 
+          mobile_number, nationality, date_of_joining, employee_role, monthly_salary, 
+          experience, religion, email, address
+        ) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      
+      const { surname, name, date_of_birth, gender, registration_number, national_id, 
+              mobile_number, nationality, date_of_joining, employee_role, monthly_salary, 
+              experience, religion, email, address } = newEmployee;
 
-      // Retourner une réponse de succès avec l'ID de l'employé (ou un autre identifiant)
-      resolve({ id: Date.now(), message: "Employee added successfully" });
+      // Exécuter l'insertion dans la base de données
+     database.run(insertQuery, [
+        surname, name, date_of_birth, gender, registration_number, pictureData, 
+        national_id, mobile_number, nationality, date_of_joining, employee_role, 
+        monthly_salary, experience, religion, email, address
+      ], function (err) {
+        if (err) {
+          console.error("Error adding employee to database:", err);
+          return reject("Failed to add employee to the database.");
+        }
+
+        // Si insertion réussie, retourner l'ID de l'employé inséré
+        resolve({ id: this.lastID, message: "Employee added successfully" });
+      });
+
     } catch (error) {
       console.error("Error adding employee:", error);
       reject("Failed to add employee. Please try again.");
     }
   });
 });
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -595,9 +603,9 @@ ipcMain.handle("get-classes", (event, args) => {
 // to add a new class
 ipcMain.handle("add-class", async (event, newClass) => {
   return new Promise((resolve, reject) => {
-    const query = 'INSERT INTO classes (name, capacity, class_fees, teacher_id) VALUES (?, ?, ?, ?)';
-    const { name, capacity, class_fees, teacher_id } = newClass;
-    database.run(query, [name, capacity, class_fees, teacher_id], function(err) {
+    const query = 'INSERT INTO classes (name, capacity, class_fees) VALUES (?, ?, ?)';
+    const { name, capacity, class_fees } = newClass;
+    database.run(query, [name, capacity, class_fees], function(err) {
       if (err) {
         console.error('Error adding class:', err.message);
         reject({ success: false, error: err.message });
@@ -637,7 +645,7 @@ ipcMain.handle("update-class", async (event, formData) => {
         teacher_id = ?
       WHERE id = ?
     `; 
-    const { name, teacher_id, id } = formData;
+    const { name, id } = formData;
     return new Promise((resolve, reject) => {
       database.run(query, [name, teacher_id, id], function(err) {
         if (err) {
