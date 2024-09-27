@@ -787,3 +787,49 @@ ipcMain.handle('reset-database', async () => {
     return `Error resetting the database: ${err.message}`;
   }
 });
+
+
+
+/*-------------------PAYEMENTS----------------- */
+/* 
+  CREATE TABLE IF NOT EXISTS student_payments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  student_id INTEGER NOT NULL,
+  payement_maker TEXT NOT NULL,
+  payment_date DATE NOT NULL,
+  amount_paid REAL NOT NULL,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
+*/
+//get student payements
+ipcMain.handle("get-payments", async (event, student_id) => {
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM student_payments WHERE student_id = ?';
+    database.all(query, [student_id], (err, rows) => {
+      if (err) {
+        console.error('Error fetching student payments:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, payments: rows });
+      }
+    });
+  });
+});
+
+// Add a new payment
+ipcMain.handle("make-payment", async (event, newPayment) => {
+  return new Promise((resolve, reject) => {
+    const query = 'INSERT INTO student_payments (title, student_id, payment_maker, payment_date, amount_paid) VALUES (?, ?, ?, ?, ?)';
+    const { title, student_id, payment_maker, payment_date, amount_paid } = newPayment;
+    database.run(query, [title, student_id, payment_maker, payment_date, amount_paid], function(err) {
+      if (err) {
+        console.error('Error adding payment:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, insertedId: this.lastID });
+      }
+    });
+  });
+});

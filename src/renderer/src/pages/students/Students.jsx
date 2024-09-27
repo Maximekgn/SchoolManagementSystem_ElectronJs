@@ -1,64 +1,40 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { debounce } from 'lodash';
+import React, { useState, useEffect, useCallback } from 'react';
 import AddStudentForm from './AddStudentForm';
 import ViewStudent from './ViewStudent';
 import StudentEdit from './EditStudent';
 
 const StudentTable = ({ students, onViewStudent, onEditStudent, onDeleteStudent }) => (
-  <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          {['ID', 'Name', 'Surname', 'Class', 'Parent Phone Number', 'Actions'].map((header) => (
-            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {students.map((student) => (
-          <tr key={student.id} className="hover:bg-gray-50 transition duration-150">
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.id}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.class_name}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.parent_mobile_number || 'N/A'}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-              <button onClick={() => onViewStudent(student)} className="text-blue-600 hover:text-blue-900 transition duration-300 mr-2">
-                View
-              </button>
-              <button onClick={() => onEditStudent(student)} className="text-green-600 hover:text-green-900 transition duration-300 mr-2">
-                Edit
-              </button>
-              <button onClick={() => onDeleteStudent(student.id)} className="text-red-600 hover:text-red-900 transition duration-300">
-                Delete
-              </button>
-            </td>
-          </tr>
+  <table className="w-full border-collapse">
+    <thead>
+      <tr>
+        {['Name', 'Surname', 'Class', 'Parent Phone', 'Actions'].map((header) => (
+          <th key={header} className="border p-2">{header}</th>
         ))}
-      </tbody>
-    </table>
-  </div>
+      </tr>
+    </thead>
+    <tbody>
+      {students.map((student) => (
+        <tr key={student.id}>
+          <td className="border p-2">{student.name}</td>
+          <td className="border p-2">{student.surname}</td>
+          <td className="border p-2">{student.class_name}</td>
+          <td className="border p-2">{student.parent_mobile_number || 'N/A'}</td>
+          <td className="border p-2">
+            <button onClick={() => onViewStudent(student)} className="mr-2 text-blue-500">View</button>
+            <button onClick={() => onEditStudent(student)} className="mr-2 text-green-500">Edit</button>
+            <button onClick={() => onDeleteStudent(student.id)} className="text-red-500">Delete</button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
 );
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
-  <div className="flex justify-center mt-4">
-    <button
-      onClick={() => onPageChange(currentPage - 1)}
-      disabled={currentPage === 1}
-      className="px-3 py-1 bg-gray-200 rounded mr-2 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      Previous
-    </button>
-    <span className="px-3 py-1">{currentPage} of {totalPages}</span>
-    <button
-      onClick={() => onPageChange(currentPage + 1)}
-      disabled={currentPage === totalPages}
-      className="px-3 py-1 bg-gray-200 rounded ml-2 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      Next
-    </button>
+  <div className="mt-4">
+    <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
+    <span className="mx-2">{currentPage} / {totalPages}</span>
+    <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
   </div>
 );
 
@@ -69,21 +45,15 @@ const Students = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const studentsPerPage = 10;
 
   const fetchStudents = useCallback(async () => {
-    setIsLoading(true);
     try {
       const response = await window.electron.ipcRenderer.invoke('get-students');
       setStudents(response);
-      setError(null);
     } catch (error) {
-      setError('Failed to fetch students. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Error fetching students:', error);
     }
   }, []);
 
@@ -93,130 +63,74 @@ const Students = () => {
 
   const handleAddStudent = async (newStudent) => {
     try {
-      const result = await window.electron.ipcRenderer.invoke('add-student', newStudent);
-      if (result.success) {
-        await fetchStudents();
-        setIsAdding(false);
-        setError(null);
-      } else {
-        await fetchStudents();
-        return { success: false, error: result.error || "Failed to add student" };
-      }
-    } catch (error) {
+      await window.electron.ipcRenderer.invoke('add-student', newStudent);
       await fetchStudents();
-      return { success: false, error: "An unexpected error occurred" };
+      setIsAdding(false);
+    } catch (error) {
+      console.error('Error adding student:', error);
     }
   };
 
   const handleDeleteStudent = async (id) => {
-
     try {
-      const result = await window.electron.ipcRenderer.invoke('delete-student', id);
-      if (result.success) {
-        await fetchStudents();
-      } else {
-        throw new Error(result.error);
-      }
+      await window.electron.ipcRenderer.invoke('delete-student', id);
+      await fetchStudents();
     } catch (error) {
-      setError('Failed to delete student. Please try again.');
+      console.error('Error deleting student:', error);
     }
   };
 
-  const handleSearchChange = useCallback(
-    debounce((e) => {
-      setSearchTerm(e.target.value);
-      setCurrentPage(1);
-    }, 300),
-    []
+  const filteredStudents = students.filter((student) =>
+    `${student.name} ${student.surname}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleViewStudent = (student) => {
-    setSelectedStudent(student);
-    setIsViewing(true);
-  };
-
-  const handleEditStudent = (student) => {
-    setSelectedStudent(student);
-    setIsEditing(true);
-  };
-
-  const handleUpdateStudent = async () => {
-    await fetchStudents();
-    setIsEditing(false);
-  };
-
-  const filteredStudents = useMemo(() => {
-    return students.filter((student) =>
-      `${student.name} ${student.surname}`.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [students, searchTerm]);
-
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
-  const paginatedStudents = useMemo(() => {
-    const start = (currentPage - 1) * studentsPerPage;
-    return filteredStudents.slice(start, start + studentsPerPage);
-  }, [filteredStudents, currentPage]);
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * studentsPerPage,
+    currentPage * studentsPerPage
+  );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Student List</h1>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Student List</h1>
 
-      <div className="flex justify-between items-center mb-6">
-        <button onClick={() => setIsAdding(true)} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
-          Add Student
-        </button>
+      <div className="mb-4">
+        <button onClick={() => setIsAdding(true)} className="bg-blue-500 text-white p-2 rounded">Add Student</button>
         <input
           type="text"
           placeholder="Search for a student..."
-          onChange={handleSearchChange}
-          className="border p-2 rounded w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="ml-4 p-2 border rounded"
         />
       </div>
 
-      {isLoading ? (
-        <div className="text-center text-gray-500">Loading students...</div>
-      ) : filteredStudents.length > 0 ? (
-        <>
-          <StudentTable
-            students={paginatedStudents}
-            onViewStudent={handleViewStudent}
-            onEditStudent={handleEditStudent}
-            onDeleteStudent={handleDeleteStudent}
-          />
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-        </>
-      ) : (
-        <div className="text-center text-gray-500">No students found.</div>
-      )}
+      <StudentTable
+        students={paginatedStudents}
+        onViewStudent={(student) => { setSelectedStudent(student); setIsViewing(true); }}
+        onEditStudent={(student) => { setSelectedStudent(student); setIsEditing(true); }}
+        onDeleteStudent={handleDeleteStudent}
+      />
+
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 
       {isViewing && (
         <ViewStudent
           student={selectedStudent}
-          onClose={() => {
-            setSelectedStudent(null);
-            setIsViewing(false);
-          }}
+          onClose={() => { setSelectedStudent(null); setIsViewing(false); }}
         />
       )}
 
       {isEditing && (
         <StudentEdit
           student={selectedStudent}
-          onClose={() => {
-            setSelectedStudent(null);
-            setIsEditing(false);
-          }}
-          onUpdate={handleUpdateStudent}
+          onClose={() => { setSelectedStudent(null); setIsEditing(false); }}
+          onUpdate={fetchStudents}
         />
       )}
 
       {isAdding && (
-        <React.Suspense fallback={<div>Loading form...</div>}>
-          <AddStudentForm onAdd={handleAddStudent} onClose={() => setIsAdding(false)} />
-        </React.Suspense>
+        <AddStudentForm onAdd={handleAddStudent} onClose={() => setIsAdding(false)} />
       )}
-
-      {error && <div className="text-red-500 mt-4">{error}</div>}
     </div>
   );
 };

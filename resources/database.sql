@@ -83,14 +83,15 @@ CREATE TABLE IF NOT EXISTS student_payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   student_id INTEGER NOT NULL,
-  payement_maker TEXT NOT NULL,
+  payment_maker TEXT NOT NULL,
   payment_date DATE NOT NULL,
   amount_paid REAL NOT NULL,
+  description TEXT,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
 -- Exemple d'insertion de paiements pour les étudiants
-INSERT INTO student_payments (title, student_id, payement_maker, payment_date, amount_paid)
+INSERT INTO student_payments (title, student_id, payment_maker, payment_date, amount_paid)
 VALUES
 ('Scolarité', 1, 'John Smith', '2023-02-01', 2500.00),
 ('Scolarité', 2, 'Jane Doe', '2023-02-01', 2200.00),
