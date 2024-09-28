@@ -2,15 +2,14 @@
 CREATE TABLE IF NOT EXISTS classes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  capacity INTEGER NOT NULL,
   class_fees REAL NOT NULL
 );
 
-INSERT INTO classes (name, capacity, class_fees)
+INSERT INTO classes (name,  class_fees)
 VALUES 
-('Class A', 30, 500.00),
-('Class B', 25, 450.00),
-('Class C', 35, 550.00);
+('Class A', 500.00),
+('Class B',  450.00),
+('Class C',  550.00);
 
 
 -- Table des étudiants (Students)

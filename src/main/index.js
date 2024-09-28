@@ -235,7 +235,6 @@ ipcMain.handle("get-students", (event, args) => {
         students.parentPhone,
         students.regNumber,
         classes.name AS className, 
-        classes.capacity, 
         classes.class_fees
       FROM students
       LEFT JOIN classes ON students.classId = classes.id
@@ -557,9 +556,9 @@ ipcMain.handle("get-classes", (event, args) => {
 // to add a new class
 ipcMain.handle("add-class", async (event, newClass) => {
   return new Promise((resolve, reject) => {
-    const query = 'INSERT INTO classes (name, capacity, class_fees) VALUES (?, ?, ?)';
-    const { name, capacity, class_fees } = newClass;
-    database.run(query, [name, capacity, class_fees], function(err) {
+    const query = 'INSERT INTO classes (name, class_fees) VALUES (?, ?)';
+    const { name,  class_fees } = newClass;
+    database.run(query, [name,  class_fees], function(err) {
       if (err) {
         console.error('Error adding class:', err.message);
         reject({ success: false, error: err.message });
@@ -591,17 +590,19 @@ ipcMain.handle('delete-class', async (event, classId) => {
 })
 
 // to update a class
+
 ipcMain.handle("update-class", async (event, formData) => {
   try {
     const query = `
       UPDATE classes SET 
-        name = ?,
-        teacher_id = ?
-      WHERE id = ?
+        name = ?, 
+        class_fees = ?
+      WHERE id = ? 
     `; 
-    const { name, id } = formData;
+
+    const { name, class_fees, id } = formData; // Make sure to extract class_fees as well
     return new Promise((resolve, reject) => {
-      database.run(query, [name, teacher_id, id], function(err) {
+      database.run(query, [name, class_fees, id], function(err) {
         if (err) {
           console.error("Error updating class:", err.message);
           reject({ success: false, error: err.message });
@@ -613,8 +614,7 @@ ipcMain.handle("update-class", async (event, formData) => {
   } catch (error) {
     return { success: false, error: error.message };
   }
-
-})
+});
 
 
 /* ----------------PAYEMENTS ----------------------*/
@@ -678,8 +678,15 @@ ipcMain.handle("add-employee-payement", async (event, newPayement) => {
 // Handle database reset
 ipcMain.handle('reset-database', async () => {
   try {
-    const dbPath = path.join(__dirname, '../../resources/database.db');
-    const sqlFilePath = path.join(__dirname, '../../resources/database.sql');
+    let dbPath, sqlFilePath;
+
+    if (process.env.NODE_ENV === 'development') {
+      dbPath = path.join(__dirname, '../../resources/dev-database.db');
+      sqlFilePath = path.join(__dirname, '../../resources/dev-database.sql');
+    } else {
+      dbPath = path.join(__dirname, '../../resources/database.db');
+      sqlFilePath = path.join(__dirname, '../../resources/database.sql');
+    }
 
     // Open the existing database connection
     const db = new sqlite.Database(dbPath);
@@ -741,6 +748,7 @@ ipcMain.handle('reset-database', async () => {
     return `Error resetting the database: ${err.message}`;
   }
 });
+
 
 
 

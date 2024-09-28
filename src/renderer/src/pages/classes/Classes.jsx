@@ -1,146 +1,136 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ViewClass from './ViewClass';
 import AddClass from './AddClass';
+import EditClass from './EditClass';
+
+const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
+  <div className="bg-white shadow sm:rounded-lg">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead>
+        <tr>
+          {['Class Name', 'Fees', 'Actions'].map((header) => (
+            <th key={header} className="px-6 py-3 text-xs font-bold uppercase">{header}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+        {classes.map((classItem) => (
+          <tr key={classItem.id}>
+            <td className="border p-3 text-lg font-semibold">{classItem.name}</td>
+            <td className="border p-3 text-lg font-semibold">{classItem.class_fees.toFixed(2)} €</td>
+            <td className="border p-3 text-lg flex justify-center">
+              <button onClick={() => onViewClass(classItem)} className="mr-2 text-blue-500">View</button>
+              <button onClick={() => onEditClass(classItem)} className="mr-2 text-green-500">Edit</button>
+              <button onClick={() => onDeleteClass(classItem.id)} className="text-red-500">Delete</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
+const Pagination = ({ currentPage, totalPages, onPageChange }) => (
+  <div className="mt-4">
+    <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
+    <span className="mx-2">{currentPage} / {totalPages}</span>
+    <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
+  </div>
+);
 
 const Classes = () => {
   const [classes, setClasses] = useState([]);
-  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState(null);
-  const [isAddingClass, setIsAddingClass] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const classesPerPage = 10;
 
-  useEffect(() => {
-    fetchClasses();
-    return () => {
-      // Cleanup effect if needed (e.g., abort fetch requests, unsubscribes)
-    };
-  }, []);
-
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     try {
       const data = await window.electron.ipcRenderer.invoke('get-classes');
       setClasses(data);
-    } catch (err) {
-      console.error("Error fetching classes:", err); // Logging the error for devs
-      setError('Failed to fetch classes.');
+    } catch (error) {
+      console.error('Error fetching classes:', error);
     }
-  };
+  }, []);
 
-  const addClass = async (newClass) => {
-    if (!newClass.name || !newClass.capacity || !newClass.class_fees) {
-      setError('Please fill in all fields correctly.');
-      return;
-    }
+  useEffect(() => {
+    fetchClasses();
+  }, [fetchClasses]);
+
+  const handleAddClass = async (newClass) => {
     try {
-      const result = await window.electron.ipcRenderer.invoke('add-class', newClass);
-      setClasses([...classes, result]);
-      setIsAddingClass(false);
-    } catch (err) {
-      console.error("Error adding class:", err);
-      setError('Failed to add class.');
+      await window.electron.ipcRenderer.invoke('add-class', newClass);
+      await fetchClasses();
+      setIsAdding(false);
+    } catch (error) {
+      console.error('Error adding class:', error);
     }
   };
 
-  const deleteClass = async (classId) => {
-    if (window.confirm('Are you sure you want to delete this class?')) {
-      try {
-        await window.electron.ipcRenderer.invoke('delete-class', classId);
-        setClasses(classes.filter((cls) => cls.id !== classId));
-      } catch (err) {
-        console.error("Error deleting class:", err);
-        setError('Failed to delete class.');
-      }
+  const handleDeleteClass = async (id) => {
+    try {
+      await window.electron.ipcRenderer.invoke('delete-class', id);
+      await fetchClasses();
+    } catch (error) {
+      console.error('Error deleting class:', error);
     }
   };
 
-  const viewClass = async (classId) => {
-    const selected = classes.find((cls) => cls.id === classId);
-    setSelectedClass(selected);
-  };
+  const filteredClasses = classes.filter((cls) =>
+    cls.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const editClass = async (classId) => {
-    // Edit logic here, if it requires async operation
-    console.log('Edit class with ID:', classId);
-  };
-
-  const closeModal = () => {
-    setSelectedClass(null);
-    setIsAddingClass(false);
-  };
-
-  const toggleAddClassModal = () => {
-    setIsAddingClass((prev) => !prev);
-    setError(''); // Clear errors when opening the modal
-  };
+  const totalPages = Math.ceil(filteredClasses.length / classesPerPage);
+  const paginatedClasses = filteredClasses.slice(
+    (currentPage - 1) * classesPerPage,
+    currentPage * classesPerPage
+  );
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Classes</h1>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Class List</h1>
 
-      <button
-        onClick={toggleAddClassModal}
-        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 mb-4"
-      >
-        Add New Class
-      </button>
-
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              {['Class Name', 'Capacity', 'Fees', 'Actions'].map((header) => (
-                <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {classes.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center py-4">
-                  No classes available.
-                </td>
-              </tr>
-            ) : (
-              classes.map((classItem) => (
-                <tr key={classItem.id} className="hover:bg-gray-50 transition duration-150">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{classItem.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{classItem.capacity}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{classItem.class_fees.toFixed(2)} €</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => viewClass(classItem.id)} className="text-blue-600 hover:text-blue-900 transition duration-300 mr-2">
-                      View
-                    </button>
-                    <button onClick={() => editClass(classItem.id)} className="text-green-600 hover:text-green-900 transition duration-300 mr-2">
-                      Edit
-                    </button>
-                    <button onClick={() => deleteClass(classItem.id)} className="text-red-600 hover:text-red-900 transition duration-300">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="mb-4">
+        <button onClick={() => setIsAdding(true)} className="bg-green-500 text-white p-2 rounded">Add Class</button>
+        <input
+          type="text"
+          placeholder="Search for a class..."
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="ml-4 p-2 border rounded"
+        />
       </div>
 
+      <ClassTable
+        classes={paginatedClasses}
+        onViewClass={(classItem) => setSelectedClass(classItem)}
+        onEditClass={(classItem) => { setSelectedClass(classItem); setIsEditing(true); }}
+        onDeleteClass={handleDeleteClass}
+      />
+
+      <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+
       {/* View Class Modal */}
-      {selectedClass && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50" aria-hidden={!selectedClass}>
-          <ViewClass classDetails={selectedClass} onClose={closeModal} />
-        </div>
+      {selectedClass && !isEditing && (
+        <ViewClass
+          classDetails={selectedClass}
+          onClose={() => setSelectedClass(null)}
+        />
+      )}
+
+      {/* Edit Class Modal */}
+      {isEditing && (
+        <EditClass
+          classDetails={selectedClass}
+          onClose={() => { setSelectedClass(null); setIsEditing(false); fetchClasses(); }}
+        />
       )}
 
       {/* Add Class Modal */}
-      {isAddingClass && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50" aria-hidden={!isAddingClass}>
-          <div className="bg-white p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
-            <AddClass onAddClass={addClass} onClose={closeModal} />
-          </div>
-        </div>
+      {isAdding && (
+        <AddClass onAddClass={handleAddClass} onClose={() => setIsAdding(false)} />
       )}
     </div>
   );

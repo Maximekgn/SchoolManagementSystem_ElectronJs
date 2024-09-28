@@ -9,68 +9,46 @@ const AddClass = ({ onAddClass, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError(''); // Reset error message
+    setError('');
 
-    if (!className || !capacity || !classFees) {
+    if (!className  || !classFees) {
       setError('All fields are required.');
       return;
     }
 
-    const parsedCapacity = parseInt(capacity, 10);
     const parsedClassFees = parseFloat(classFees);
 
-    if (isNaN(parsedCapacity) || isNaN(parsedClassFees)) {
+    if (isNaN(parsedClassFees)) {
       setError('Capacity and Class Fees must be valid numbers.');
       return;
     }
 
-    if (parsedCapacity <= 0) {
-      setError('Capacity must be a positive number.');
-      return;
-    }
-
-    if (parsedClassFees < 0) {
-      setError('Class Fees must be a positive number or zero.');
+    if ( parsedClassFees < 0) {
+      setError('Class Fees must be non-negative.');
       return;
     }
 
     const newClass = {
       name: className,
-      capacity: parsedCapacity,
       class_fees: parsedClassFees,
     };
 
-    onAddClass(newClass); // Call the function to add the class
-
-    // Reset form fields after submission
-    setClassName('');
-    setCapacity('');
-    setClassFees('');
+    onAddClass(newClass);
+    onClose();
   };
 
   return (
-    <div className="p-4 bg-white shadow rounded-lg">
-      <h1 className="text-2xl font-bold mb-4">Add New Class</h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+      <div style={{ margin: '100px auto', padding: '20px', background: '#fff', borderRadius: '5px', width: '300px' }}>
+        <h3 style={{ marginBottom: '10px', textAlign: 'center' }}>Add New Class</h3>
+        <form onSubmit={handleSubmit}>
+          {error && <p style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>{error}</p>}
           <input
             type="text"
             value={className}
             onChange={(e) => setClassName(e.target.value)}
             placeholder="Class Name"
-            className="border p-2 rounded w-full mb-2"
-            aria-label="Class Name"
-            required
-          />
-          <input
-            type="number"
-            value={capacity}
-            onChange={(e) => setCapacity(e.target.value)}
-            placeholder="Capacity"
-            className="border p-2 rounded w-full mb-2"
-            aria-label="Capacity"
-            min="1"
+            style={{ width: '100%', padding: '8px', marginBottom: '10px', borderRadius: '3px', border: '1px solid #ccc' }}
             required
           />
           <input
@@ -78,29 +56,24 @@ const AddClass = ({ onAddClass, onClose }) => {
             value={classFees}
             onChange={(e) => setClassFees(e.target.value)}
             placeholder="Class Fees"
-            className="border p-2 rounded w-full mb-2"
-            aria-label="Class Fees"
-            min="0"
-            step="0.01" // Allows up to two decimal points for fees
+            style={{ width: '100%', padding: '8px', marginBottom: '10px', borderRadius: '3px', border: '1px solid #ccc' }}
+            step="0.01"
             required
           />
-        </div>
-        <div className="flex justify-between">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
+            style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
           >
             Add Class
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300"
-          >
-            Close
-          </button>
-        </div>
-      </form>
+        </form>
+        <button
+          onClick={onClose}
+          style={{ marginTop: '10px', width: '100%', padding: '10px', backgroundColor: '#ccc', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+        >
+          Close
+        </button>
+      </div>
     </div>
   );
 };

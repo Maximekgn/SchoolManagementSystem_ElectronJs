@@ -1,19 +1,37 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { FaUser, FaUsers, FaDollarSign } from 'react-icons/fa'; // Icons for better visual presentation
+import React, { useEffect } from 'react';
 
 const ViewClass = ({ classDetails, onClose }) => {
+  // Close on 'Esc' key press
+  useEffect(() => {
+    const handleEsc = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
   if (!classDetails) {
     return (
-      <div className="p-4 bg-white shadow rounded-lg">
-        <h1 className="text-2xl font-bold mb-4">Class Details</h1>
-        <p className="text-red-500">Class details not available.</p>
-        <button
-          onClick={onClose}
-          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300"
-        >
-          Close
-        </button>
+      <div 
+        className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
+        role="dialog" 
+        aria-labelledby="class-details-title" 
+        aria-modal="true"
+      >
+        <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md transform transition-all duration-300 ease-out scale-95 sm:scale-100">
+          <h2 id="class-details-title" className="text-2xl font-bold text-gray-800 mb-4">Class Details</h2>
+          <p className="text-red-500">Class details not available.</p>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={onClose}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -21,40 +39,49 @@ const ViewClass = ({ classDetails, onClose }) => {
   const { name, capacity, class_fees } = classDetails;
 
   return (
-    <div className="p-6 bg-white shadow-xl rounded-lg max-w-md mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Class Details</h1>
-      <div className="mb-6 flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <FaUser className="text-blue-500" size={24} />
-          <p className="text-gray-700 text-lg font-semibold">Class Name: <span className="text-gray-900">{name}</span></p>
+    <div 
+      className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
+      role="dialog" 
+      aria-labelledby="class-details-title" 
+      aria-modal="true"
+    >
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md transform transition-all duration-300 ease-out scale-95 sm:scale-100">
+        <div className="flex justify-between items-center mb-6">
+          <h2 id="class-details-title" className="text-2xl font-bold text-gray-800">Class Details</h2>
+          <button 
+            onClick={onClose} 
+            className="text-gray-600 hover:text-gray-800" 
+            aria-label="Close class details"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <div className="flex items-center gap-4">
-          <FaUsers className="text-blue-500" size={24} />
-          <p className="text-gray-700 text-lg font-semibold">Capacity: <span className="text-gray-900">{capacity}</span></p>
+
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <p className="text-sm font-medium text-gray-500">Class Name</p>
+            <p className="mt-1 text-sm text-gray-900">{name || 'N/A'}</p>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-gray-500">Fees</p>
+            <p className="mt-1 text-sm text-gray-900">{class_fees !== undefined ? `FCFA ${class_fees}` : 'N/A'}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <FaDollarSign className="text-blue-500" size={24} />
-          <p className="text-gray-700 text-lg font-semibold">Fees: <span className="text-gray-900">${class_fees.toFixed(2)}</span></p>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-300"
+          >
+            Close
+          </button>
         </div>
       </div>
-      <button
-        onClick={onClose}
-        className="mt-6 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition duration-300"
-        aria-label="Close class details"
-      >
-        Close
-      </button>
     </div>
   );
-};
-
-ViewClass.propTypes = {
-  classDetails: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    capacity: PropTypes.number.isRequired,
-    class_fees: PropTypes.number.isRequired,
-  }).isRequired,
-  onClose: PropTypes.func.isRequired,
 };
 
 export default ViewClass;
