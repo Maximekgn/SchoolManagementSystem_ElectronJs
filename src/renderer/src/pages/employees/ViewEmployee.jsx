@@ -46,15 +46,15 @@ const ViewEmployee = ({ employee, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">First Name</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.name}</p>
+            <p className="mt-1 text-sm text-gray-900">{employee.name || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Last Name</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.surname}</p>
+            <p className="mt-1 text-sm text-gray-900">{employee.surname || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Date of Birth</p>
-            <p className="mt-1 text-sm text-gray-900">{formatDate(employee.date_of_birth)}</p>
+            <p className="mt-1 text-sm text-gray-900">{formatDate(employee.birthDate)|| 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Gender</p>
@@ -75,15 +75,15 @@ const ViewEmployee = ({ employee, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Employee Role</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.employee_role}</p>
+            <p className="mt-1 text-sm text-gray-900">{employee.role || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Date of Joining</p>
-            <p className="mt-1 text-sm text-gray-900">{formatDate(employee.date_of_joining)}</p>
+            <p className="mt-1 text-sm text-gray-900">{formatDate(employee.joinDate) || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Monthly Salary</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.monthly_salary ? `FCFA ${employee.monthly_salary}` : 'N/A'}</p>
+            <p className="mt-1 text-sm text-gray-900">{employee.salary ? `FCFA ${employee.salary}` : 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Experience</p>
@@ -96,7 +96,7 @@ const ViewEmployee = ({ employee, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Mobile Number</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.mobile_number || 'N/A'}</p>
+            <p className="mt-1 text-sm text-gray-900">{employee.phone || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Email</p>

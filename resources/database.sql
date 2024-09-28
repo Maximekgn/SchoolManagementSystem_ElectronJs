@@ -51,23 +51,22 @@ CREATE TABLE IF NOT EXISTS employees (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   surname TEXT NOT NULL,
   name TEXT NOT NULL,
-  date_of_birth DATE,
+  birthDate DATE,
   gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Male',
-  registration_number TEXT ,
-  picture BLOB,
-  national_id TEXT ,
-  mobile_number TEXT ,
+  regNumber TEXT ,
+  nationalId TEXT ,
+  phone TEXT ,
   nationality TEXT,
-  date_of_joining DATE NOT NULL,
-  employee_role TEXT NOT NULL,
-  monthly_salary REAL DEFAULT 0,
+  joinDate DATE NOT NULL,
+  role TEXT NOT NULL,
+  salary REAL DEFAULT 0,
   experience TEXT,
   religion TEXT,
   email TEXT ,
   address TEXT
 );
 
-INSERT INTO employees (surname, name, date_of_birth, gender, registration_number, national_id, mobile_number, nationality, date_of_joining, employee_role, monthly_salary, experience, religion, email, address)
+INSERT INTO employees (surname, name, birthDate, gender,regNumber, nationalId, phone, nationality, joinDate, role, salary, experience, religion, email, address)
 VALUES 
 ('Smith', 'John', '1980-05-15', 'Male', 'EMP001', 'NI123456789', '1234567890', 'British', '2010-09-01', 'Teacher', 2500.00, '10 years', 'Christian', 'john.smith@example.com', '123 Oxford St, London'),
 ('Doe', 'Jane', '1985-08-22', 'Female', 'EMP002', 'NI987654321', '0987654321', 'American', '2015-01-15', 'Teacher', 2200.00, '5 years', 'Atheist', 'jane.doe@example.com', '456 Maple St, New York'),

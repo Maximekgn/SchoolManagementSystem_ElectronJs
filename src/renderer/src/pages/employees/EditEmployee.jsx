@@ -61,12 +61,12 @@ const EditEmployee = ({ employee, onClose }) => {
             />
           </div>
           <div>
-            <label htmlFor="date_of_birth" className="text-sm font-medium text-gray-500">Date of Birth</label>
+            <label htmlFor="birthDate" className="text-sm font-medium text-gray-500">Date of Birth</label>
             <input
               type="date"
-              id="date_of_birth"
-              name="date_of_birth"
-              value={editedEmployee.date_of_birth || ''}
+              id="birthDate"
+              name="birthDate"
+              value={editedEmployee.birthDate || ''}
               onChange={handleChange}
               className="border p-2 rounded w-full mb-2"
             />
@@ -115,35 +115,35 @@ const EditEmployee = ({ employee, onClose }) => {
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Employment Information</h3>
           </div>
           <div>
-            <label htmlFor="employee_role" className="text-sm font-medium text-gray-500">Role</label>
+            <label htmlFor="role" className="text-sm font-medium text-gray-500">Role</label>
             <input
               type="text"
-              id="employee_role"
-              name="employee_role"
-              value={editedEmployee.employee_role || ''}
+              id="role"
+              name="role"
+              value={editedEmployee.role || ''}
               onChange={handleChange}
               placeholder="Role"
               className="border p-2 rounded w-full mb-2"
             />
           </div>
           <div>
-            <label htmlFor="date_of_joining" className="text-sm font-medium text-gray-500">Date of Joining</label>
+            <label htmlFor="joinDate" className="text-sm font-medium text-gray-500">Date of Joining</label>
             <input
               type="date"
-              id="date_of_joining"
-              name="date_of_joining"
-              value={editedEmployee.date_of_joining || ''}
+              id="joinDate"
+              name="joinDate"
+              value={editedEmployee.joinDate || ''}
               onChange={handleChange}
               className="border p-2 rounded w-full mb-2"
             />
           </div>
           <div>
-            <label htmlFor="monthly_salary" className="text-sm font-medium text-gray-500">Monthly Salary</label>
+            <label htmlFor="salary" className="text-sm font-medium text-gray-500">Monthly Salary</label>
             <input
               type="number"
-              id="monthly_salary"
-              name="monthly_salary"
-              value={editedEmployee.monthly_salary || ''}
+              id="salary"
+              name="salary"
+              value={editedEmployee.salary || ''}
               onChange={handleChange}
               placeholder="Monthly Salary"
               className="border p-2 rounded w-full mb-2"
@@ -167,12 +167,12 @@ const EditEmployee = ({ employee, onClose }) => {
             <h3 className="text-xl font-semibold text-gray-700 mb-4">Contact Information</h3>
           </div>
           <div>
-            <label htmlFor="mobile_number" className="text-sm font-medium text-gray-500">Mobile Number</label>
+            <label htmlFor="phone" className="text-sm font-medium text-gray-500">Mobile Number</label>
             <input
               type="tel"
-              id="mobile_number"
-              name="mobile_number"
-              value={editedEmployee.mobile_number || ''}
+              id="phone"
+              name="phone"
+              value={editedEmployee.phone || ''}
               onChange={handleChange}
               placeholder="Mobile Number"
               className="border p-2 rounded w-full mb-2"

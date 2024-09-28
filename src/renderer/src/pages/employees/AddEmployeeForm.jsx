@@ -4,16 +4,15 @@ const AddEmployeeForm = ({ onClose }) => {
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
-    date_of_birth: new Date().toISOString().split('T')[0],
+    birthDate: new Date().toISOString().split('T')[0],
     gender: 'Male',
-    registration_number: '',
-    picture: null,
-    national_id: '',
-    mobile_number: '',
+    regNumber: '',
+    nationalId: '',
+    phone: '',
     nationality: '',
-    date_of_joining: new Date().toISOString().split('T')[0],
-    employee_role: '',
-    monthly_salary: 0,
+    joinDate: new Date().toISOString().split('T')[0],
+    role: '',
+    salary: 0,
     experience: '',
     religion: '',
     email: '',
@@ -23,28 +22,22 @@ const AddEmployeeForm = ({ onClose }) => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Gestion du changement des inputs
   const handleChange = (e) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({ ...prev, [name]: type === 'number' ? Number(value) || 0 : value }));
     setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  // Gestion du fichier image
-  const handleFileChange = (e) => setFormData(prev => ({ ...prev, picture: e.target.files[0] }));
-
-  // Validation simple
   const validateForm = () => {
-    const requiredFields = ['name', 'surname', 'employee_role', 'date_of_birth'];
+    const requiredFields = ['name', 'surname', 'role', 'birthDate'];
     const newErrors = requiredFields.reduce((acc, field) => {
-      if (!formData[field].trim()) acc[field] = `${field.replace(/_/g, ' ')} is required.`;
+      if (!formData[field].trim()) acc[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`;
       return acc;
     }, {});
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -54,13 +47,13 @@ const AddEmployeeForm = ({ onClose }) => {
       await window.electron.ipcRenderer.invoke('add-employee', formData);
       onClose();
     } catch (error) {
-      alert('Error adding employee. Please try again.');
+      console.error('Error adding employee:', error);
+      setErrors({ submit: error.message || 'Failed to add employee. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Fonction pour créer les champs de formulaire
   const renderInput = (name, label, type = 'text', isRequired = false) => (
     <div className="mb-4 w-full sm:w-1/2 px-2">
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -84,13 +77,13 @@ const AddEmployeeForm = ({ onClose }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {renderInput('surname', 'Surname', 'text', true)}
             {renderInput('name', 'Name', 'text', true)}
-            {renderInput('date_of_birth', 'Date of Birth', 'date', true)}
-            {renderInput('national_id', 'National ID')}
-            {renderInput('mobile_number', 'Mobile Number', 'tel')}
+            {renderInput('birthDate', 'Date of Birth', 'date', true)}
+            {renderInput('nationalId', 'National ID')}
+            {renderInput('phone', 'Mobile Number', 'tel')}
             {renderInput('nationality', 'Nationality')}
-            {renderInput('date_of_joining', 'Date of Joining', 'date', true)}
-            {renderInput('employee_role', 'Role', 'text', true)}
-            {renderInput('monthly_salary', 'Monthly Salary', 'number')}
+            {renderInput('joinDate', 'Date of Joining', 'date', true)}
+            {renderInput('role', 'Role', 'text', true)}
+            {renderInput('salary', 'Monthly Salary', 'number')}
             {renderInput('experience', 'Experience')}
             {renderInput('religion', 'Religion')}
             {renderInput('email', 'Email', 'email')}
@@ -109,17 +102,6 @@ const AddEmployeeForm = ({ onClose }) => {
                 <option value="Other">Other</option>
               </select>
             </div>
-
-            <div className="mb-4 w-full sm:w-1/2 px-2">
-              <label className="block text-sm font-medium text-gray-700">Picture</label>
-              <input
-                type="file"
-                name="picture"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-500 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-            </div>
           </div>
 
           <div className="flex justify-end mt-6 space-x-3">
@@ -132,7 +114,7 @@ const AddEmployeeForm = ({ onClose }) => {
             </button>
             <button
               type="submit"
-              className={`bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition ${isSubmitting ? 'opacity-50' : ''}`}
+              className={`bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Adding...' : 'Add Employee'}

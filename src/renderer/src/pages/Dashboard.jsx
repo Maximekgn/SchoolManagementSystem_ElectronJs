@@ -14,14 +14,11 @@ const Dashboard = () => {
         setTotalStudents(students.length);
       }
 
-      const teachers = await window.electron.ipcRenderer.invoke('get-teachers');
-      if (teachers) {
-        setTotalTeachers(teachers.length);
-      }
-
       const employees = await window.electron.ipcRenderer.invoke('get-employees');
       if (employees) {
         setTotalEmployees(employees.length);
+        const teachers = employees.filter(employee => employee.role.toLowerCase() === 'teacher').length;
+        setTotalTeachers(teachers);
       }
 
       const classes = await window.electron.ipcRenderer.invoke('get-classes');

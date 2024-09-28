@@ -383,16 +383,16 @@ ipcMain.handle('delete-student', async (event, studentId) => {
 /*id INTEGER PRIMARY KEY AUTOINCREMENT,
   surname TEXT NOT NULL,
   name TEXT NOT NULL,
-  bithDate DATE,
+  birthDate DATE,
   gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Male',
   regNumber TEXT UNIQUE,
   picture BLOB,
-  national_id TEXT UNIQUE,
-  mobile_number TEXT UNIQUE,
+  nationalId TEXT UNIQUE,
+  phone TEXT UNIQUE,
   nationality TEXT,
-  date_of_joining DATE NOT NULL,
-  employee_role TEXT NOT NULL,
-  monthly_salary REAL DEFAULT 0,
+  joinDate DATE NOT NULL,
+  role TEXT NOT NULL,
+  salary REAL DEFAULT 0,
   experience TEXT,
   religion TEXT,
   email TEXT UNIQUE,
@@ -410,20 +410,6 @@ ipcMain.handle("get-employees", (event, args) => {
     });
   });
 })
-
-//to get all teachers
-ipcMain.handle("get-teachers", (event, args) => {
-  return new Promise((resolve, reject) => {
-    database.all("SELECT * FROM employees where employee_role = 'Teacher' ", (err, rows) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rows);
-      }
-    });
-  });
-})
-
 
 
 //to delete a employee
@@ -449,29 +435,21 @@ ipcMain.handle('delete-employee', async (event, employeeId) => {
 //to update an employee
 ipcMain.handle("update-employee", async (event, formData) => {
   try {
-    let picturePath = null;
-    if (formData.picture) {
-      const fileName = `${formData.regNumber}_${Date.now()}${path.extname(formData.picture.path)}`;
-      const destPath = path.join(app.getPath('userData'), 'uploads', fileName);
-      await fs.mkdir(path.dirname(destPath), { recursive: true });
-      await fs.copyFile(formData.picture.path, destPath);
-      picturePath = destPath;
-    }
+    
 
     const query = `
       UPDATE employees SET 
         surname = ?, 
         name = ?, 
-        bithDate = ?, 
+        birthDate = ?, 
         gender = ?,
         regNumber = ?,
-        picture = ? ,
-        national_id = ?,
-        mobile_number = ?,
+        nationalId = ?,
+        phone = ?,
         nationality = ?,
-        date_of_joining = ?,
-        employee_role = ?,
-        monthly_salary = ?,
+        joinDate = ?,
+        role = ?,
+        salary = ?,
         experience = ?,
         religion = ?,
         email = ?,
@@ -480,16 +458,16 @@ ipcMain.handle("update-employee", async (event, formData) => {
     `; 
 
     const {
-      surname, name  , bithDate, gender , regNumber
-      , picture, national_id, mobile_number, nationality, date_of_joining, employee_role ,
-      monthly_salary, experience, religion, email, address, id
+      surname, name  , birthDate, gender , regNumber
+      , nationalId, phone, nationality, joinDate, role ,
+      salary, experience, religion, email, address, id
       } = formData;
 
     return new Promise((resolve, reject) => {
       database.run(query, [
-        surname, name  , bithDate, gender , regNumber ,
-        picture, national_id, mobile_number, nationality, date_of_joining, employee_role ,
-        monthly_salary, experience, religion, email, address, id
+        surname, name  , birthDate, gender , regNumber ,
+        nationalId, phone, nationality, joinDate, role ,
+        salary, experience, religion, email, address, id
       ], function(err) {
         if (err) {
           console.error("Error updating employee:", err.message);
@@ -508,37 +486,31 @@ ipcMain.handle("update-employee", async (event, formData) => {
 ipcMain.handle("add-employee", async (event, newEmployee) => {
   return new Promise((resolve, reject) => {
     try {
+
+      // supprime date_of_birth
+      delete newEmployee.date_of_birth;
       console.log("Received employee data:", newEmployee);
 
-      // Gérer l'image si elle existe
-      let pictureData = null;
-      if (newEmployee.picture) {
-        const picturePath = path.join(__dirname, "uploads", `${Date.now()}_${newEmployee.picture.name}`);
-        
-        // Enregistrer l'image sur le disque
-        fs.writeFileSync(picturePath, newEmployee.picture); // Sauvegarde l'image
-        pictureData = fs.readFileSync(picturePath); // Lis le fichier pour l'insérer dans la BDD en tant que BLOB
-      }
 
       // Insérer les données de l'employé dans SQLite
       const insertQuery = `
         INSERT INTO employees (
-          surname, name, bithDate, gender, regNumber, picture, national_id, 
-          mobile_number, nationality, date_of_joining, employee_role, monthly_salary, 
+          name, surname, birthDate, gender, regNumber,  nationalId, 
+          phone, nationality, joinDate, role, salary, 
           experience, religion, email, address
         ) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
-      const { surname, name, bithDate, gender, regNumber, national_id, 
-              mobile_number, nationality, date_of_joining, employee_role, monthly_salary, 
+      const { name, surname, birthDate, gender, regNumber, nationalId, 
+              phone, nationality, joinDate, role, salary, 
               experience, religion, email, address } = newEmployee;
 
       // Exécuter l'insertion dans la base de données
      database.run(insertQuery, [
-        surname, name, bithDate, gender, regNumber, pictureData, 
-        national_id, mobile_number, nationality, date_of_joining, employee_role, 
-        monthly_salary, experience, religion, email, address
+        name , surname, birthDate, gender, regNumber,  
+        nationalId, phone, nationality, joinDate, role, 
+        salary, experience, religion, email, address
       ], function (err) {
         if (err) {
           console.error("Error adding employee to database:", err);
