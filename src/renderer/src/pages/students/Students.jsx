@@ -4,22 +4,23 @@ import ViewStudent from './ViewStudent';
 import StudentEdit from './EditStudent';
 
 const StudentTable = ({ students, onViewStudent, onEditStudent, onDeleteStudent }) => (
-  <table className="w-full border-collapse">
+  <div className="bg-white shadow sm:rounded-lg">
+    <table className="min-w-full divide-y divide-gray-200">
     <thead>
       <tr>
         {['Name', 'Surname', 'Class', 'Parent Phone', 'Actions'].map((header) => (
-          <th key={header} className="border p-2">{header}</th>
+          <th key={header} className="px-6 py-3 text-xs font-bold uppercase">{header}</th>
         ))}
       </tr>
     </thead>
-    <tbody>
+    <tbody className='bg-white divide-y divide-gray-200'>
       {students.map((student) => (
         <tr key={student.id}>
-          <td className="border p-2">{student.name}</td>
-          <td className="border p-2">{student.surname}</td>
-          <td className="border p-2">{student.class_name}</td>
-          <td className="border p-2">{student.parent_mobile_number || 'N/A'}</td>
-          <td className="border p-2">
+          <td className="border p-3 text-lg font-semibold ">{student.name}</td>
+          <td className="border p-3 text-lg font-semibold ">{student.surname}</td>
+          <td className="border p-3 text-lg font-semibold ">{student.className}</td>
+          <td className="border p-3 text-lg font-semibold ">{student.parentPhone|| 'N/A'}</td>
+          <td className="border p-3 text-lg  flex justify-center">
             <button onClick={() => onViewStudent(student)} className="mr-2 text-blue-500">View</button>
             <button onClick={() => onEditStudent(student)} className="mr-2 text-green-500">Edit</button>
             <button onClick={() => onDeleteStudent(student.id)} className="text-red-500">Delete</button>
@@ -28,6 +29,8 @@ const StudentTable = ({ students, onViewStudent, onEditStudent, onDeleteStudent 
       ))}
     </tbody>
   </table>
+  </div>
+  
 );
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
@@ -100,7 +103,7 @@ const Students = () => {
           type="text"
           placeholder="Search for a student..."
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="ml-4 p-2 border rounded"
+          className="ml-4 p-2 border rounded first-letter"
         />
       </div>
 

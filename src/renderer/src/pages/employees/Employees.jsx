@@ -20,12 +20,12 @@ const EmployeeTable = ({ employees, onView, onEdit, onDelete }) => (
       <tbody className="bg-white divide-y divide-gray-200">
         {employees.map(({ id, name, surname, employee_role, mobile_number }) => (
           <tr key={id} className="hover:bg-gray-50">
-            <td className="px-6 py-4 text-sm text-gray-500">{id}</td>
-            <td className="px-6 py-4 text-sm font-medium text-gray-900">{name}</td>
-            <td className="px-6 py-4 text-sm text-gray-500">{surname}</td>
-            <td className="px-6 py-4 text-sm text-gray-500">{employee_role}</td>
-            <td className="px-6 py-4 text-sm text-gray-500">{mobile_number || 'N/A'}</td>
-            <td className="px-6 py-4 text-right text-sm font-medium">
+            <td className="p-6 py-4 text-sm">{id}</td>
+            <td className="p-6 py-4 text-sm font-medium text-gray-900">{name}</td>
+            <td className="p-6 py-4 text-sm">{surname}</td>
+            <td className="p-6 py-4 text-sm">{employee_role}</td>
+            <td className="p-6 py-4 text-sm">{mobile_number || 'N/A'}</td>
+            <td className="p-6 py-4 text-right text-sm font-medium">
               <button onClick={() => onView(id)} className="text-blue-600 hover:text-blue-900 mr-2">View</button>
               <button onClick={() => onEdit(id)} className="text-green-600 hover:text-green-900 mr-2">Edit</button>
               <button onClick={() => onDelete(id)} className="text-red-600 hover:text-red-900">Delete</button>

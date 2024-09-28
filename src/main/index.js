@@ -184,26 +184,29 @@ ipcMain.handle("close", (event, args) => {
 
 //---------------------STUDENTS-----------------------------
 /*
+  CREATE TABLE IF NOT EXISTS students (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   surname TEXT NOT NULL,
   name TEXT NOT NULL,
-  date_of_birth DATE NOT NULL,
-  place_of_birth TEXT,
-  gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Other',
-  picture BLOB,
-  registration_number TEXT UNIQUE,
-  date_of_admission DATE NOT NULL,
-  class_id INTEGER,
-  discount_in_fee REAL DEFAULT 0,
-  blood_group TEXT ,
-  medical_condition TEXT,
-  previous_school TEXT,
+  birthDate DATE NOT NULL,
+  birthPlace TEXT,
+  gender TEXT NOT NULL DEFAULT 'Other',
+  regNumber TEXT ,
+  admissionDate DATE NOT NULL,
+  classId INTEGER,
+  discountFee REAL DEFAULT 0,
+  schoolFee REAL DEFAULT 0,
+  paidFee REAL DEFAULT 0,
+  bloudGroup TEXT ,
+  medicalCondition TEXT,
+  previousSchool TEXT,
   religion TEXT,
-  additional_note TEXT,
-  parent_name TEXT,
-  parent_surname TEXT,
-  parent_mobile_number TEXT,
-  FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
+  additionalNote TEXT,
+  parentName TEXT,
+  parentSurname TEXT,
+  parentPhone TEXT,
+  FOREIGN KEY (classId) REFERENCES classes(id) ON DELETE SET NULL
+);
 */
 //get all students
 ipcMain.handle("get-students", (event, args) => {
@@ -213,28 +216,29 @@ ipcMain.handle("get-students", (event, args) => {
         students.id, 
         students.surname, 
         students.name, 
-        students.date_of_birth, 
-        students.place_of_birth, 
-        students.gender, 
-        students.picture, 
-        students.registration_number, 
-        students.date_of_admission,
-        students.discount_in_fee, 
-        students.blood_group, 
-        students.medical_condition,
-        students.previous_school, 
-        students.religion, 
-        students.additional_note,
-        students.parent_name, 
-        students.parent_surname, 
-        students.parent_mobile_number,
-        students.school_fee,
-        students.paid_school_fee,
-        classes.name AS class_name, 
+        students.birthDate,
+        students.birthPlace,
+        students.gender,
+        students.regNumber,
+        students.admissionDate,
+        students.classId,
+        students.discountFee,
+        students.schoolFee,
+        students.paidFee,
+        students.bloudGroup,
+        students.medicalCondition,
+        students.previousSchool,
+        students.religion,
+        students.additionalNote,
+        students.parentName,
+        students.parentSurname,
+        students.parentPhone,
+        students.regNumber,
+        classes.name AS className, 
         classes.capacity, 
         classes.class_fees
       FROM students
-      LEFT JOIN classes ON students.class_id = classes.id
+      LEFT JOIN classes ON students.classId = classes.id
     `;
 
     database.all(query, (err, rows) => {
@@ -249,60 +253,49 @@ ipcMain.handle("get-students", (event, args) => {
 });
 
 //add a student 
-ipcMain.handle("add-student", async (event, formData) => 
-{
-  const requiredFields = [ 'name', 'dateOfBirth', 'registrationNumber', 'classId'];
-  const values = [
-    'surname', 'name', 'dateOfBirth', 'placeOfBirth', 'gender',
-    'registrationNumber', 'dateOfAdmission', 'classId', 'discountInFees',
-    'school_fee', 0, 'bloodGroup',
-    'medicalCondition', 'previousSchool', 'religion', 'parentName',
-    'parentSurname', 'parentMobileNumber'
-  ].map(field => formData[field] || '');
+ipcMain.handle("add-student", async (event, formData) => {
+  console.log("Received student data:", formData);
 
-  const query = `
-    INSERT INTO students (
-      surname, name, date_of_birth, place_of_birth, gender,
-      registration_number, date_of_admission, class_id, discount_in_fee,
-      school_fee, paid_school_fee, blood_group,
-      medical_condition, previous_school, religion, parent_name,
-      parent_surname, parent_mobile_number
-    ) VALUES (${values.map(() => '?').join(', ')})
-  `;
-
-  try {
-    // Vérification des champs obligatoires
-    requiredFields.forEach(field => {
-      if (!formData[field]) throw new Error(`Le champ ${field} est obligatoire.`);
-    });
-
-    // Validations supplémentaires
-    if (isNaN(Date.parse(formData.dateOfBirth))) {
-      throw new Error('La date de naissance n\'est pas valide.');
-    }
-
-    if (isNaN(Number(formData.school_fee)) || Number(formData.school_fee) < 0) {
-      throw new Error('Les frais de scolarité doivent être un nombre positif.');
-    }
-
-    await database.run(query, values);
-
-    // Récupérer l'ID du dernier étudiant inséré
-    const lastInsertIdQuery = "SELECT last_insert_rowid() as lastId";
-    const lastInsertResult = await database.get(lastInsertIdQuery);
-
-    if (lastInsertResult && lastInsertResult.lastId) {
-      console.log("Étudiant ajouté avec succès. ID:", lastInsertResult.lastId);
-      return { success: true, message: "Étudiant ajouté avec succès.", studentId: lastInsertResult.lastId };
-    } else {
-      console.warn("L'insertion a été effectuée, mais l'ID n'a pas pu être récupéré.");
-      return { success: true, message: "Étudiant ajouté avec succès, mais sans confirmation d'ID." };
-    }
-  } catch (err) {
-    console.error("Erreur lors de l'insertion de l'étudiant:", err.message);
-    return { success: false, error: err.message };
+  // Validation des données (ignorer si c'est une réponse de succès)
+  if (typeof formData === 'object' && formData.success) {
+    console.log('Ignoring success response data');
+    return; // Ignorer si les données sont la réponse de succès
   }
+
+  // Validation stricte pour s'assurer que les données correctes sont reçues
+  if (!formData.surname || formData.surname.trim() === '') {
+    console.error("Validation error: Surname is required");
+    return { success: false, error: "Surname is required" };
+  }
+
+  return new Promise((resolve, reject) => {
+    const query = `INSERT INTO students (
+      name, surname, birthDate, birthPlace, gender, admissionDate, classId, 
+      discountFee, schoolFee, paidFee, bloudGroup, medicalCondition, 
+      previousSchool, religion, additionalNote, parentName, parentSurname, parentPhone
+    ) VALUES (${',?'.repeat(18).slice(1)})`;
+
+    const values = [
+      formData.name, formData.surname, formData.birthDate, formData.birthPlace,
+      formData.gender, formData.admissionDate, formData.classId, formData.discountFee,
+      formData.schoolFee, formData.paidFee, formData.bloudGroup, formData.medicalCondition,
+      formData.previousSchool, formData.religion, formData.additionalNote,
+      formData.parentName, formData.parentSurname, formData.parentPhone
+    ];
+
+    database.run(query, values, function(err) {
+      if (err) {
+        console.error("Error adding student:", err.message);
+        resolve({ success: false, error: err.message });
+      } else {
+        console.log("Student added successfully. ID:", this.lastID);
+        resolve({ success: true, id: this.lastID });
+      }
+    });
+  });
 });
+
+
 
 
 // update a student

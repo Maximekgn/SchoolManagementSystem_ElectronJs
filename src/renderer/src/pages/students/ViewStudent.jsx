@@ -60,27 +60,27 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">First Name</p>
-            <p className="mt-1 text-sm text-gray-900">{student.name}</p>
+            <p className="mt-1  font-semibold">{student.name}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Last Name</p>
-            <p className="mt-1 text-sm text-gray-900">{student.surname}</p>
+            <p className="mt-1  font-semibold">{student.surname}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Date of Birth</p>
-            <p className="mt-1 text-sm text-gray-900">{formatDate(student.date_of_birth)}</p>
+            <p className="mt-1  font-semibold">{formatDate(student.birthDate)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Place of Birth</p>
-            <p className="mt-1 text-sm text-gray-900">{student.place_of_birth || 'N/A'}</p>
+            <p className="mt-1  font-semibold">{student.birthPlace || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Gender</p>
-            <p className="mt-1 text-sm text-gray-900">{student.gender || 'N/A'}</p>
+            <p className="mt-1  font-semibold">{student.gender || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Religion</p>
-            <p className="mt-1 text-sm text-gray-900">{student.religion || 'N/A'}</p>
+            <p className="mt-1  font-semibold">{student.religion || 'N/A'}</p>
           </div>
 
           {/* Academic Information */}
@@ -89,27 +89,27 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Registration Number</p>
-            <p className="mt-1 text-sm text-gray-900">{student.registration_number}</p>
+            <p className="mt-1  font-semibold">{student.regNumber}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Date of Admission</p>
-            <p className="mt-1 text-sm text-gray-900">{formatDate(student.date_of_admission)}</p>
+            <p className="mt-1  font-semibold">{formatDate(student.admissionDate)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Class</p>
-            <p className="mt-1 text-sm text-gray-900">{student.class_name}</p>
+            <p className="mt-1  font-semibold">{student.className}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Previous School</p>
-            <p className="mt-1 text-sm text-gray-900">{student.previous_school || 'N/A'}</p>
+            <p className="mt-1  font-semibold">{student.previousSchool || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">School Fees</p>
-            <p className="mt-1 text-sm text-gray-900">{student.school_fee}</p>
+            <p className="mt-1  font-semibold">{student.schoolFee}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Paid Fees</p>
-            <p className="mt-1 text-sm text-gray-900">{student.paid_school_fee || 0}</p>
+            <p className="mt-1  font-semibold">{student.paidFee || 0}</p>
           </div>
 
           {/* Health Information */}
@@ -118,11 +118,11 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Blood Group</p>
-            <p className="mt-1 text-sm text-gray-900">{student.blood_group || 'N/A'}</p>
+            <p className="mt-1  font-semibold">{student.bloodGroup || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Medical Condition</p>
-            <p className="mt-1 text-sm text-gray-900">{student.medical_condition || 'None'}</p>
+            <p className="mt-1  font-semibold">{student.medicalCondition || 'None'}</p>
           </div>
 
           {/* Parent Information */}
@@ -131,15 +131,15 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Parent's First Name</p>
-            <p className="mt-1 text-sm text-gray-900">{student.parent_name}</p>
+            <p className="mt-1  font-semibold">{student.parentName}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Parent's Last Name</p>
-            <p className="mt-1 text-sm text-gray-900">{student.parent_surname}</p>
+            <p className="mt-1  font-semibold">{student.parentSurname}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Parent's Mobile Number</p>
-            <p className="mt-1 text-sm text-gray-900">{student.parent_mobile_number || 'N/A'}</p>
+            <p className="mt-1  font-semibold">{student.parentPhone|| 'N/A'}</p>
           </div>
         </div>
 
