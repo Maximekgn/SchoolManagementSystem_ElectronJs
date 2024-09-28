@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS students (
   discountFee REAL DEFAULT 0,
   schoolFee REAL DEFAULT 0,
   paidFee REAL DEFAULT 0,
-  bloudGroup TEXT ,
+  bloodGroup TEXT ,
   medicalCondition TEXT,
   previousSchool TEXT,
   religion TEXT,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS students (
   FOREIGN KEY (classId) REFERENCES classes(id) ON DELETE SET NULL
 );
 
-INSERT INTO students (surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, classId, bloudGroup, medicalCondition, previousSchool, religion, parentName, parentSurname, parentPhone)
+INSERT INTO students (surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, classId, bloodGroup, medicalCondition, previousSchool, religion, parentName, parentSurname, parentPhone)
 VALUES 
 ('Johnson', 'Emily', '2010-03-25', 'London', 'Female', 'STU001', '2020-09-01', 1, 'O+', 'None', 'Little Stars Academy', 'Christian', 'Michael', 'Johnson', '1231231234'),
 ('Brown', 'Oliver', '2011-07-19', 'New York', 'Male', 'STU002', '2021-09-01', 2, 'A+', 'Asthma', 'Sunrise School', 'Atheist', 'William', 'Brown', '4564564567'),

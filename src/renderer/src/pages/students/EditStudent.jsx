@@ -88,7 +88,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="date"
               id="date_of_birth"
               name="date_of_birth"
-              value={editedStudent.date_of_birth}
+              value={editedStudent.birthDate}
               onChange={handleChange}
               className="border p-2 rounded w-full mb-2"
             />
@@ -99,7 +99,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="text"
               id="place_of_birth"
               name="place_of_birth"
-              value={editedStudent.place_of_birth}
+              value={editedStudent.birthPlace}
               onChange={handleChange}
               placeholder="Place of Birth"
               className="border p-2 rounded w-full mb-2"
@@ -142,7 +142,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="text"
               id="registration_number"
               name="registration_number"
-              value={editedStudent.registration_number}
+              value={editedStudent.regNumber}
               onChange={handleChange}
               placeholder="Registration Number"
               className="border p-2 rounded w-full mb-2"
@@ -154,7 +154,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="date"
               id="date_of_admission"
               name="date_of_admission"
-              value={editedStudent.date_of_admission}
+              value={editedStudent.admissionDate}
               onChange={handleChange}
               className="border p-2 rounded w-full mb-2"
             />
@@ -164,7 +164,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
             <select
               id="class_name"
               name="class_name"
-              value={editedStudent.class_name}
+              value={editedStudent.className}
               onChange={handleChange}
               className="border p-2 rounded w-full mb-2"
             >
@@ -182,7 +182,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="text"
               id="previous_school"
               name="previous_school"
-              value={editedStudent.previous_school}
+              value={editedStudent.previousSchool}
               onChange={handleChange}
               placeholder="Previous School"
               className="border p-2 rounded w-full mb-2"
@@ -199,7 +199,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="text"
               id="blood_group"
               name="blood_group"
-              value={editedStudent.blood_group}
+              value={editedStudent.bloodGroup}
               onChange={handleChange}
               placeholder="Blood Group"
               className="border p-2 rounded w-full mb-2"
@@ -211,7 +211,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="text"
               id="medical_condition"
               name="medical_condition"
-              value={editedStudent.medical_condition}
+              value={editedStudent.medicalCondition}
               onChange={handleChange}
               placeholder="Medical Condition"
               className="border p-2 rounded w-full mb-2"
@@ -228,7 +228,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="text"
               id="parent_name"
               name="parent_name"
-              value={editedStudent.parent_name}
+              value={editedStudent.parentName}
               onChange={handleChange}
               placeholder="Parent's First Name"
               className="border p-2 rounded w-full mb-2"
@@ -240,7 +240,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="text"
               id="parent_surname"
               name="parent_surname"
-              value={editedStudent.parent_surname}
+              value={editedStudent.parentSurname}
               onChange={handleChange}
               placeholder="Parent's Last Name"
               className="border p-2 rounded w-full mb-2"
@@ -252,7 +252,7 @@ const StudentEdit = ({ student, onClose, onSave }) => {
               type="tel"
               id="parent_mobile_number"
               name="parent_mobile_number"
-              value={editedStudent.parent_mobile_number}
+              value={editedStudent.parentPhone}
               onChange={handleChange}
               placeholder="Parent's Mobile Number"
               className="border p-2 rounded w-full mb-2"

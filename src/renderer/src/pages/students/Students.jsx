@@ -126,7 +126,7 @@ const Students = () => {
       {isEditing && (
         <StudentEdit
           student={selectedStudent}
-          onClose={() => { setSelectedStudent(null); setIsEditing(false); }}
+          onClose={() => { setSelectedStudent(null); setIsEditing(false); fetchStudents(); }}
           onUpdate={fetchStudents}
         />
       )}

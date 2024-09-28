@@ -225,7 +225,7 @@ ipcMain.handle("get-students", (event, args) => {
         students.discountFee,
         students.schoolFee,
         students.paidFee,
-        students.bloudGroup,
+        students.bloodGroup,
         students.medicalCondition,
         students.previousSchool,
         students.religion,
@@ -302,64 +302,52 @@ ipcMain.handle("add-student", async (event, formData) => {
 ipcMain.handle("update-student", async (event, formData) => {
   try {
     // Input validation
-    const requiredFields = ['surname', 'name', 'date_of_birth', 'gender', 'registration_number', 'class_id'];
+    const requiredFields = ['surname', 'name', 'birthDate', 'gender', 'regNumber', 'classId'];
     for (const field of requiredFields) {
       if (!formData[field]) {
         throw new Error(`${field} is required`);
       }
     }
 
-    let picturePath = formData.picture;
-
-    // Handle picture upload if a new file is provided
-    if (formData.picture && formData.picture.path) {
-      const fileName = `${formData.registration_number}_${Date.now()}${path.extname(formData.picture.path)}`;
-      const destPath = path.join(app.getPath('userData'), 'uploads', fileName);
-      await fs.mkdir(path.dirname(destPath), { recursive: true });
-      await fs.copyFile(formData.picture.path, destPath);
-      picturePath = destPath;
-    }
-
     const query = `
       UPDATE students SET
         surname = ?,
         name = ?,
-        date_of_birth = ?,
-        place_of_birth = ?,
+        birthDate = ?,
+        birthPlace = ?,
         gender = ?,
-        registration_number = ?,
-        date_of_admission = ?,
-        class_id = ?,
-        blood_group = ?,
-        medical_condition = ?,
-        previous_school = ?,
+        regNumber = ?,
+        admissionDate = ?,
+        classId = ?,
+        bloodGroup = ?,
+        medicalCondition = ?,
+        previousSchool = ?,
         religion = ?,
-        parent_name = ?,
-        parent_surname = ?,
-        parent_mobile_number = ?,
-        picture = ?
+        parentName = ?,
+        parentSurname = ?,
+        parentPhone = ?
       WHERE id = ?
     `;
 
     const {
-      surname, name, date_of_birth, place_of_birth, gender,
-      registration_number, date_of_admission, class_id, blood_group,
-      medical_condition, previous_school, religion, parent_name,
-      parent_surname, parent_mobile_number, id
+      surname, name, birthDate, birthPlace, gender,
+      regNumber, admissionDate, classId, bloodGroup,
+      medicalCondition, previousSchool, religion, parentName,
+      parentSurname, parentPhone, id
     } = formData;
 
     return new Promise((resolve, reject) => {
       database.run(query, [
-        surname, name, date_of_birth, place_of_birth, gender,
-        registration_number, date_of_admission, class_id, blood_group,
-        medical_condition, previous_school, religion, parent_name,
-        parent_surname, parent_mobile_number, picturePath, id
+        surname, name, birthDate, birthPlace, gender,
+        regNumber, admissionDate, classId, bloodGroup,
+        medicalCondition, previousSchool, religion, parentName,
+        parentSurname, parentPhone, id
       ], function(err) {
         if (err) {
           console.error("Error updating student:", err.message);
           reject({ success: false, error: err.message });
         } else {
-          resolve({ success: true, updatedId: this.lastID });
+          resolve({ success: true, updatedId: id });
         }
       });
     });
@@ -368,6 +356,7 @@ ipcMain.handle("update-student", async (event, formData) => {
     return { success: false, error: error.message };
   }
 });
+
 
 //delete a student
 ipcMain.handle('delete-student', async (event, studentId) => {
@@ -394,9 +383,9 @@ ipcMain.handle('delete-student', async (event, studentId) => {
 /*id INTEGER PRIMARY KEY AUTOINCREMENT,
   surname TEXT NOT NULL,
   name TEXT NOT NULL,
-  date_of_birth DATE,
+  bithDate DATE,
   gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Male',
-  registration_number TEXT UNIQUE,
+  regNumber TEXT UNIQUE,
   picture BLOB,
   national_id TEXT UNIQUE,
   mobile_number TEXT UNIQUE,
@@ -462,7 +451,7 @@ ipcMain.handle("update-employee", async (event, formData) => {
   try {
     let picturePath = null;
     if (formData.picture) {
-      const fileName = `${formData.registration_number}_${Date.now()}${path.extname(formData.picture.path)}`;
+      const fileName = `${formData.regNumber}_${Date.now()}${path.extname(formData.picture.path)}`;
       const destPath = path.join(app.getPath('userData'), 'uploads', fileName);
       await fs.mkdir(path.dirname(destPath), { recursive: true });
       await fs.copyFile(formData.picture.path, destPath);
@@ -473,9 +462,9 @@ ipcMain.handle("update-employee", async (event, formData) => {
       UPDATE employees SET 
         surname = ?, 
         name = ?, 
-        date_of_birth = ?, 
+        bithDate = ?, 
         gender = ?,
-        registration_number = ?,
+        regNumber = ?,
         picture = ? ,
         national_id = ?,
         mobile_number = ?,
@@ -491,14 +480,14 @@ ipcMain.handle("update-employee", async (event, formData) => {
     `; 
 
     const {
-      surname, name  , date_of_birth, gender , registration_number
+      surname, name  , bithDate, gender , regNumber
       , picture, national_id, mobile_number, nationality, date_of_joining, employee_role ,
       monthly_salary, experience, religion, email, address, id
       } = formData;
 
     return new Promise((resolve, reject) => {
       database.run(query, [
-        surname, name  , date_of_birth, gender , registration_number ,
+        surname, name  , bithDate, gender , regNumber ,
         picture, national_id, mobile_number, nationality, date_of_joining, employee_role ,
         monthly_salary, experience, religion, email, address, id
       ], function(err) {
@@ -534,20 +523,20 @@ ipcMain.handle("add-employee", async (event, newEmployee) => {
       // Insérer les données de l'employé dans SQLite
       const insertQuery = `
         INSERT INTO employees (
-          surname, name, date_of_birth, gender, registration_number, picture, national_id, 
+          surname, name, bithDate, gender, regNumber, picture, national_id, 
           mobile_number, nationality, date_of_joining, employee_role, monthly_salary, 
           experience, religion, email, address
         ) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
       
-      const { surname, name, date_of_birth, gender, registration_number, national_id, 
+      const { surname, name, bithDate, gender, regNumber, national_id, 
               mobile_number, nationality, date_of_joining, employee_role, monthly_salary, 
               experience, religion, email, address } = newEmployee;
 
       // Exécuter l'insertion dans la base de données
      database.run(insertQuery, [
-        surname, name, date_of_birth, gender, registration_number, pictureData, 
+        surname, name, bithDate, gender, regNumber, pictureData, 
         national_id, mobile_number, nationality, date_of_joining, employee_role, 
         monthly_salary, experience, religion, email, address
       ], function (err) {

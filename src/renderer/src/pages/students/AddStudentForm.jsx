@@ -13,7 +13,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
     discountFee: 0,
     schoolFee: 0,
     paidFee: 0,
-    bloudGroup: '',
+    bloodGroup: '',
     medicalCondition: '',
     previousSchool: '',
     religion: '',
