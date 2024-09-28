@@ -181,7 +181,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
                 { value: '', label: 'Select a class' },
                 ...classes.map(cls => ({ value: cls.id, label: cls.name }))
               ])}
-              {renderField('bloudGroup', 'Blood Group')}
+              {renderField('bloodGroup', 'Blood Group')}
               {renderField('medicalCondition', 'Medical Condition')}
               {renderField('previousSchool', 'Previous School')}
               {renderField('religion', 'Religion')}

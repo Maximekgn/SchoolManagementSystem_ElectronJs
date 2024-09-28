@@ -197,7 +197,7 @@ ipcMain.handle("close", (event, args) => {
   discountFee REAL DEFAULT 0,
   schoolFee REAL DEFAULT 0,
   paidFee REAL DEFAULT 0,
-  bloudGroup TEXT ,
+  bloodGroup TEXT ,
   medicalCondition TEXT,
   previousSchool TEXT,
   religion TEXT,
@@ -234,8 +234,7 @@ ipcMain.handle("get-students", (event, args) => {
         students.parentSurname,
         students.parentPhone,
         students.regNumber,
-        classes.name AS className, 
-        classes.class_fees
+        classes.name AS className
       FROM students
       LEFT JOIN classes ON students.classId = classes.id
     `;
@@ -270,14 +269,14 @@ ipcMain.handle("add-student", async (event, formData) => {
   return new Promise((resolve, reject) => {
     const query = `INSERT INTO students (
       name, surname, birthDate, birthPlace, gender, admissionDate, classId, 
-      discountFee, schoolFee, paidFee, bloudGroup, medicalCondition, 
+      discountFee, schoolFee, paidFee, bloodGroup, medicalCondition, 
       previousSchool, religion, additionalNote, parentName, parentSurname, parentPhone
     ) VALUES (${',?'.repeat(18).slice(1)})`;
 
     const values = [
       formData.name, formData.surname, formData.birthDate, formData.birthPlace,
       formData.gender, formData.admissionDate, formData.classId, formData.discountFee,
-      formData.schoolFee, formData.paidFee, formData.bloudGroup, formData.medicalCondition,
+      formData.schoolFee, formData.paidFee, formData.bloodGroup, formData.medicalCondition,
       formData.previousSchool, formData.religion, formData.additionalNote,
       formData.parentName, formData.parentSurname, formData.parentPhone
     ];
@@ -358,11 +357,11 @@ ipcMain.handle("update-student", async (event, formData) => {
 
 
 //delete a student
-ipcMain.handle('delete-student', async (event, studentId) => {
+ipcMain.handle('delete-student', async (event, student_id) => {
   return new Promise((resolve, reject) => {
     const query = 'DELETE FROM students WHERE id = ?';
 
-    database.run(query, [studentId], function(err) {
+    database.run(query, [student_id], function(err) {
       if (err) {
         console.error('Error deleting student:', err.message);
         reject({ success: false, error: err.message });
@@ -680,9 +679,9 @@ ipcMain.handle('reset-database', async () => {
   try {
     let dbPath, sqlFilePath;
 
-    if (process.env.NODE_ENV === 'development') {
-      dbPath = path.join(__dirname, '../../resources/dev-database.db');
-      sqlFilePath = path.join(__dirname, '../../resources/dev-database.sql');
+    if (process.env.NODE_ENV === 'dev') {
+      dbPath = path.join(__dirname, '../resources/app.asar.unpacked/resources/database.db');
+      sqlFilePath = path.join(__dirname, '../resources/app.asar.unpacked/resources/database.sql');
     } else {
       dbPath = path.join(__dirname, '../../resources/database.db');
       sqlFilePath = path.join(__dirname, '../../resources/database.sql');
@@ -786,6 +785,16 @@ ipcMain.handle("make-payment", async (event, newPayment) => {
     const query = 'INSERT INTO student_payments (title, student_id, payment_maker, payment_date, amount_paid) VALUES (?, ?, ?, ?, ?)';
     const { title, student_id, payment_maker, payment_date, amount_paid } = newPayment;
     database.run(query, [title, student_id, payment_maker, payment_date, amount_paid], function(err) {
+      if (err) {
+        console.error('Error adding payment:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, insertedId: this.lastID });
+      }
+    });
+    // augmenter paidFee dans la table student
+    const query2 = 'UPDATE students SET paidFee = paidFee + ? WHERE id = ?';
+    database.run(query2, [amount_paid, student_id], function(err) {
       if (err) {
         console.error('Error adding payment:', err.message);
         reject({ success: false, error: err.message });
