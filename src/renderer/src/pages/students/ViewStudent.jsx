@@ -89,15 +89,15 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Registration Number</p>
-            <p className="mt-1  font-semibold">{student.regNumber}</p>
+            <p className="mt-1  font-semibold">{student.regNumber || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Date of Admission</p>
-            <p className="mt-1  font-semibold">{formatDate(student.admissionDate)}</p>
+            <p className="mt-1  font-semibold">{formatDate(student.admissionDate) || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Class</p>
-            <p className="mt-1  font-semibold">{student.className}</p>
+            <p className="mt-1  font-semibold">{student.className || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Previous School</p>
@@ -105,7 +105,7 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">School Fees</p>
-            <p className="mt-1  font-semibold">{student.schoolFee}</p>
+            <p className="mt-1  font-semibold">{student.schoolFee || 0}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Paid Fees</p>
@@ -131,11 +131,11 @@ const ViewStudent = ({ student, onClose }) => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Parent's First Name</p>
-            <p className="mt-1  font-semibold">{student.parentName}</p>
+            <p className="mt-1  font-semibold">{student.parentName || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Parent's Last Name</p>
-            <p className="mt-1  font-semibold">{student.parentSurname}</p>
+            <p className="mt-1  font-semibold">{student.parentSurname || 'N/A'  }</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Parent's Mobile Number</p>
