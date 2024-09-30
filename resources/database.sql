@@ -37,11 +37,11 @@ CREATE TABLE IF NOT EXISTS students (
   FOREIGN KEY (classId) REFERENCES classes(id) ON DELETE SET NULL
 );
 
-INSERT INTO students (surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, classId, bloodGroup, medicalCondition, previousSchool, religion, parentName, parentSurname, parentPhone)
+INSERT INTO students (surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, classId, bloodGroup, medicalCondition, previousSchool, religion, parentName, parentSurname, parentPhone, schoolFee, discountFee)
 VALUES 
-('Johnson', 'Emily', '2010-03-25', 'London', 'Female', 'STU001', '2020-09-01', 1, 'O+', 'None', 'Little Stars Academy', 'Christian', 'Michael', 'Johnson', '1231231234'),
-('Brown', 'Oliver', '2011-07-19', 'New York', 'Male', 'STU002', '2021-09-01', 2, 'A+', 'Asthma', 'Sunrise School', 'Atheist', 'William', 'Brown', '4564564567'),
-('Wilson', 'Sophia', '2009-12-10', 'Toronto', 'Female', 'STU003', '2019-09-01', 1, 'B+', 'Diabetes', 'Greenfield School', 'Muslim', 'David', 'Wilson', '7897897890');
+('Johnson', 'Emily', '2010-03-25', 'London', 'Female', 'STU001', '2020-09-01', 1, 'O+', 'None', 'Little Stars Academy', 'Christian', 'Michael', 'Johnson', '1231231234', 500.00, 0),
+('Brown', 'Oliver', '2011-07-19', 'New York', 'Male', 'STU002', '2021-09-01', 2, 'A+', 'Asthma', 'Sunrise School', 'Atheist', 'William', 'Brown', '4564564567', 450.00, 50.00),
+('Wilson', 'Sophia', '2009-12-10', 'Toronto', 'Female', 'STU003', '2019-09-01', 1, 'B+', 'Diabetes', 'Greenfield School', 'Muslim', 'David', 'Wilson', '7897897890', 500.00, 25.00);
 
 
 

@@ -1,19 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-const StudentEdit = ({ student, onClose, onSave }) => {
+const EditStudent = ({ student, onClose, onUpdate }) => {
   const [editedStudent, setEditedStudent] = useState({ ...student });
   const [classes, setClasses] = useState([]);
 
   useEffect(() => {
     fetchClasses();
-  }, []);
-
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setEditedStudent((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   }, []);
 
   const fetchClasses = useCallback(async () => {
@@ -25,258 +17,118 @@ const StudentEdit = ({ student, onClose, onSave }) => {
     }
   }, []);
 
-  const handleSave = useCallback(() => {
-    const updatedStudent = {
-      ...editedStudent,
-      class_id: getClassId(editedStudent.class_name),
-    };
-    delete updatedStudent.class_name;
-    console.log('Updated student:', updatedStudent);
-    window.electron.ipcRenderer.invoke('update-student', updatedStudent);
-    onClose();
-  }, [editedStudent, onClose]);
+  const handleChange = useCallback((e) => {
+    const { name, value, type } = e.target;
+    setEditedStudent((prev) => ({
+      ...prev,
+      [name]: type === 'number' ? parseFloat(value) : value,
+    }));
+  }, []);
 
-  const getClassId = useCallback((className) => {
-    const selectedClass = classes.find((classe) => classe.name === className);
-    return selectedClass ? selectedClass.id : null;
-  }, [classes]);
+  const handleSave = useCallback(async () => {
+    try {
+      const result = await window.electron.ipcRenderer.invoke('update-student', editedStudent);
+      if (result.success) {
+        onUpdate();
+        onClose();
+      } else {
+        console.error('Failed to update student:', result.error);
+        // Handle error (e.g., show error message to user)
+      }
+    } catch (error) {
+      console.error('Error updating student:', error);
+      // Handle error (e.g., show error message to user)
+    }
+  }, [editedStudent, onClose, onUpdate]);
+
+  const renderField = (name, label, type = 'text', options = null) => (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      {options ? (
+        <select
+          name={name}
+          value={editedStudent[name]}
+          onChange={handleChange}
+          className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        >
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={editedStudent[name]}
+          onChange={handleChange}
+          className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
+        />
+      )}
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-screen overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Edit Student</h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-800">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6">
-          {/* Personal Information */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Personal Information</h3>
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Edit Student</h2>
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Student Information</h3>
+              {renderField('name', 'First Name')}
+              {renderField('surname', 'Last Name')}
+              {renderField('birthDate', 'Birth Date', 'date')}
+              {renderField('birthPlace', 'Birth Place')}
+              {renderField('gender', 'Gender', 'select', [
+                { value: 'Male', label: 'Male' },
+                { value: 'Female', label: 'Female' },
+                { value: 'Other', label: 'Other' }
+              ])}
+              {renderField('regNumber', 'Registration Number')}
+              {renderField('admissionDate', 'Admission Date', 'date')}
+              {renderField('classId', 'Class', 'select', [
+                { value: '', label: 'Select a class' },
+                ...classes.map(cls => ({ value: cls.id, label: cls.name }))
+              ])}
+              {renderField('bloodGroup', 'Blood Group')}
+              {renderField('medicalCondition', 'Medical Condition')}
+              {renderField('previousSchool', 'Previous School')}
+              {renderField('religion', 'Religion')}
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-4">Financial Information</h3>
+              {renderField('schoolFee', 'School Fee', 'number')}
+              {renderField('discountFee', 'Discount Fee', 'number')}
+              {renderField('paidFee', 'Paid Fee', 'number')}
+              <h3 className="text-xl font-semibold mb-4 mt-6">Parent Information</h3>
+              {renderField('parentName', 'Parent Name')}
+              {renderField('parentSurname', 'Parent Surname')}
+              {renderField('parentPhone', 'Parent Phone', 'tel')}
+              <h3 className="text-xl font-semibold mb-4 mt-6">Additional Information</h3>
+              {renderField('additionalNote', 'Additional Note', 'textarea')}
+            </div>
           </div>
-          <div>
-            <label htmlFor="name" className="text-sm font-medium text-gray-500">First Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={editedStudent.name}
-              onChange={handleChange}
-              placeholder="First Name"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="surname" className="text-sm font-medium text-gray-500">Last Name</label>
-            <input
-              type="text"
-              id="surname"
-              name="surname"
-              value={editedStudent.surname}
-              onChange={handleChange}
-              placeholder="Last Name"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="date_of_birth" className="text-sm font-medium text-gray-500">Date of Birth</label>
-            <input
-              type="date"
-              id="date_of_birth"
-              name="date_of_birth"
-              value={editedStudent.birthDate}
-              onChange={handleChange}
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="place_of_birth" className="text-sm font-medium text-gray-500">Place of Birth</label>
-            <input
-              type="text"
-              id="place_of_birth"
-              name="place_of_birth"
-              value={editedStudent.birthPlace}
-              onChange={handleChange}
-              placeholder="Place of Birth"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="gender" className="text-sm font-medium text-gray-500">Gender</label>
-            <select
-              id="gender"
-              name="gender"
-              value={editedStudent.gender}
-              onChange={handleChange}
-              className="border p-2 rounded w-full mb-2"
+          <div className="flex justify-end space-x-4 mt-8">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-200"
             >
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="religion" className="text-sm font-medium text-gray-500">Religion</label>
-            <input
-              type="text"
-              id="religion"
-              name="religion"
-              value={editedStudent.religion}
-              onChange={handleChange}
-              placeholder="Religion"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-
-          {/* Academic Information */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Academic Information</h3>
-          </div>
-          <div>
-            <label htmlFor="registration_number" className="text-sm font-medium text-gray-500">Registration Number</label>
-            <input
-              type="text"
-              id="registration_number"
-              name="registration_number"
-              value={editedStudent.regNumber}
-              onChange={handleChange}
-              placeholder="Registration Number"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="date_of_admission" className="text-sm font-medium text-gray-500">Date of Admission</label>
-            <input
-              type="date"
-              id="date_of_admission"
-              name="date_of_admission"
-              value={editedStudent.admissionDate}
-              onChange={handleChange}
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="class_name" className="text-sm font-medium text-gray-500">Class</label>
-            <select
-              id="class_name"
-              name="class_name"
-              value={editedStudent.className}
-              onChange={handleChange}
-              className="border p-2 rounded w-full mb-2"
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200"
             >
-              <option value="">Select a class</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
+              Save Changes
+            </button>
           </div>
-          <div>
-            <label htmlFor="previous_school" className="text-sm font-medium text-gray-500">Previous School</label>
-            <input
-              type="text"
-              id="previous_school"
-              name="previous_school"
-              value={editedStudent.previousSchool}
-              onChange={handleChange}
-              placeholder="Previous School"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-
-          {/* Health Information */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Health Information</h3>
-          </div>
-          <div>
-            <label htmlFor="blood_group" className="text-sm font-medium text-gray-500">Blood Group</label>
-            <input
-              type="text"
-              id="blood_group"
-              name="blood_group"
-              value={editedStudent.bloodGroup}
-              onChange={handleChange}
-              placeholder="Blood Group"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="medical_condition" className="text-sm font-medium text-gray-500">Medical Condition</label>
-            <input
-              type="text"
-              id="medical_condition"
-              name="medical_condition"
-              value={editedStudent.medicalCondition}
-              onChange={handleChange}
-              placeholder="Medical Condition"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-
-          {/* Parent Information */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Parent Information</h3>
-          </div>
-          <div>
-            <label htmlFor="parent_name" className="text-sm font-medium text-gray-500">Parent's First Name</label>
-            <input
-              type="text"
-              id="parent_name"
-              name="parent_name"
-              value={editedStudent.parentName}
-              onChange={handleChange}
-              placeholder="Parent's First Name"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="parent_surname" className="text-sm font-medium text-gray-500">Parent's Last Name</label>
-            <input
-              type="text"
-              id="parent_surname"
-              name="parent_surname"
-              value={editedStudent.parentSurname}
-              onChange={handleChange}
-              placeholder="Parent's Last Name"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="parent_mobile_number" className="text-sm font-medium text-gray-500">Parent's Mobile Number</label>
-            <input
-              type="tel"
-              id="parent_mobile_number"
-              name="parent_mobile_number"
-              value={editedStudent.parentPhone}
-              onChange={handleChange}
-              placeholder="Parent's Mobile Number"
-              className="border p-2 rounded w-full mb-2"
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={handleSave}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 mr-2"
-          >
-            Save
-          </button>
-          <button
-            onClick={onClose}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-300"
-          >
-            Close
-          </button>
-        </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default StudentEdit;
+export default EditStudent;

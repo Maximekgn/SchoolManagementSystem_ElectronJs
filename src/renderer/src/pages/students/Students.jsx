@@ -86,7 +86,6 @@ const Students = () => {
 
   const handleAddStudent = async (newStudent) => {
     try {
-      await window.electron.ipcRenderer.invoke('add-student', newStudent);
       await fetchStudents();
       setIsAdding(false);
     } catch (error) {
@@ -154,7 +153,7 @@ const Students = () => {
       {isEditing && (
         <StudentEdit
           student={selectedStudent}
-          onClose={() => { setSelectedStudent(null); setIsEditing(false); fetchStudents(); }}
+          onClose={() => { setSelectedStudent(null); setIsEditing(false); }}
           onUpdate={fetchStudents}
         />
       )}

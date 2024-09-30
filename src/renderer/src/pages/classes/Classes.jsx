@@ -18,7 +18,7 @@ const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
         {classes.map((classItem) => (
           <tr key={classItem.id} className="hover:bg-gray-50">
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{classItem.name}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{classItem.class_fees.toFixed(2)} €</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{classItem.class_fees.toFixed(2)} FCFA</td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <button onClick={() => onViewClass(classItem)} className="text-blue-600 hover:text-blue-900 mr-3">
                 <FiEye className="inline-block mr-1" /> View
@@ -152,6 +152,7 @@ const Classes = () => {
         <EditClass
           classDetails={selectedClass}
           onClose={() => { setSelectedClass(null); setIsEditing(false); fetchClasses(); }}
+          onUpdate={fetchClasses}
         />
       )}
 

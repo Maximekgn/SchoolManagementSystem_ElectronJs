@@ -213,27 +213,7 @@ ipcMain.handle("get-students", (event, args) => {
   return new Promise((resolve, reject) => {
     const query = `
       SELECT 
-        students.id, 
-        students.surname, 
-        students.name, 
-        students.birthDate,
-        students.birthPlace,
-        students.gender,
-        students.regNumber,
-        students.admissionDate,
-        students.classId,
-        students.discountFee,
-        students.schoolFee,
-        students.paidFee,
-        students.bloodGroup,
-        students.medicalCondition,
-        students.previousSchool,
-        students.religion,
-        students.additionalNote,
-        students.parentName,
-        students.parentSurname,
-        students.parentPhone,
-        students.regNumber,
+        students.*,
         classes.name AS className
       FROM students
       LEFT JOIN classes ON students.classId = classes.id
@@ -254,18 +234,6 @@ ipcMain.handle("get-students", (event, args) => {
 ipcMain.handle("add-student", async (event, formData) => {
   console.log("Received student data:", formData);
 
-  // Validation des données (ignorer si c'est une réponse de succès)
-  if (typeof formData === 'object' && formData.success) {
-    console.log('Ignoring success response data');
-    return; // Ignorer si les données sont la réponse de succès
-  }
-
-  // Validation stricte pour s'assurer que les données correctes sont reçues
-  if (!formData.surname || formData.surname.trim() === '') {
-    console.error("Validation error: Surname is required");
-    return { success: false, error: "Surname is required" };
-  }
-
   return new Promise((resolve, reject) => {
     const query = `INSERT INTO students (
       name, surname, birthDate, birthPlace, gender, admissionDate, classId, 
@@ -284,7 +252,7 @@ ipcMain.handle("add-student", async (event, formData) => {
     database.run(query, values, function(err) {
       if (err) {
         console.error("Error adding student:", err.message);
-        resolve({ success: false, error: err.message });
+        reject({ success: false, error: err.message });
       } else {
         console.log("Student added successfully. ID:", this.lastID);
         resolve({ success: true, id: this.lastID });
@@ -299,47 +267,29 @@ ipcMain.handle("add-student", async (event, formData) => {
 // update a student
 ipcMain.handle("update-student", async (event, formData) => {
   try {
-    // Input validation
-    const requiredFields = ['surname', 'name', 'birthDate', 'gender', 'regNumber', 'classId'];
-    for (const field of requiredFields) {
-      if (!formData[field]) {
-        throw new Error(`${field} is required`);
-      }
-    }
-
     const query = `
       UPDATE students SET
-        surname = ?,
-        name = ?,
-        birthDate = ?,
-        birthPlace = ?,
-        gender = ?,
-        regNumber = ?,
-        admissionDate = ?,
-        classId = ?,
-        bloodGroup = ?,
-        medicalCondition = ?,
-        previousSchool = ?,
-        religion = ?,
-        parentName = ?,
-        parentSurname = ?,
-        parentPhone = ?
+        surname = ?, name = ?, birthDate = ?, birthPlace = ?, gender = ?,
+        regNumber = ?, admissionDate = ?, classId = ?, discountFee = ?,
+        schoolFee = ?, paidFee = ?, bloodGroup = ?, medicalCondition = ?,
+        previousSchool = ?, religion = ?, additionalNote = ?,
+        parentName = ?, parentSurname = ?, parentPhone = ?
       WHERE id = ?
     `;
 
     const {
-      surname, name, birthDate, birthPlace, gender,
-      regNumber, admissionDate, classId, bloodGroup,
-      medicalCondition, previousSchool, religion, parentName,
-      parentSurname, parentPhone, id
+      surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, 
+      classId, discountFee, schoolFee, paidFee, bloodGroup, medicalCondition, 
+      previousSchool, religion, additionalNote, parentName, parentSurname, 
+      parentPhone, id
     } = formData;
 
     return new Promise((resolve, reject) => {
       database.run(query, [
-        surname, name, birthDate, birthPlace, gender,
-        regNumber, admissionDate, classId, bloodGroup,
-        medicalCondition, previousSchool, religion, parentName,
-        parentSurname, parentPhone, id
+        surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, 
+        classId, discountFee, schoolFee, paidFee, bloodGroup, medicalCondition, 
+        previousSchool, religion, additionalNote, parentName, parentSurname, 
+        parentPhone, id
       ], function(err) {
         if (err) {
           console.error("Error updating student:", err.message);

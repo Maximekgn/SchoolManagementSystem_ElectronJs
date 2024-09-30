@@ -93,21 +93,15 @@ const AddStudentForm = ({ onAdd, onClose }) => {
           additionalNote: formData.additionalNote || ''
         };
   
-        // Assure-toi de ne pas renvoyer une réponse déjà réussie
-        if (updatedFormData.success) {
-          console.log('Ignoring already processed success data');
-          return;
-        }
-  
         console.log("Sending form data:", updatedFormData);
         const result = await window.electron.ipcRenderer.invoke('add-student', updatedFormData);
   
         console.log("Received result:", result);
   
         if (result.success) {
-          onAdd(result);  // Callback pour mise à jour de la liste des étudiants
-          setFormData(initialFormData); // Réinitialiser le formulaire après ajout
-          onClose();  // Fermer le formulaire
+          onAdd(result);
+          setFormData(initialFormData);
+          onClose();
         } else {
           throw new Error(result.error || 'Failed to add student');
         }
