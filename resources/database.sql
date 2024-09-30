@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS employees (
   address TEXT
 );
 
+
 INSERT INTO employees (surname, name, birthDate, gender,regNumber, nationalId, phone, nationality, joinDate, role, salary, experience, religion, email, address)
 VALUES 
 ('Smith', 'John', '1980-05-15', 'Male', 'EMP001', 'NI123456789', '1234567890', 'British', '2010-09-01', 'Teacher', 2500.00, '10 years', 'Christian', 'john.smith@example.com', '123 Oxford St, London'),
@@ -80,9 +81,9 @@ CREATE TABLE IF NOT EXISTS student_payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   student_id INTEGER NOT NULL,
-  payment_maker TEXT NOT NULL,
   payment_date DATE NOT NULL,
   amount_paid REAL NOT NULL,
+  discount REAL DEFAULT 0,
   description TEXT,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );

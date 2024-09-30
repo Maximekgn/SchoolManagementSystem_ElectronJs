@@ -2,26 +2,33 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ViewClass from './ViewClass';
 import AddClass from './AddClass';
 import EditClass from './EditClass';
+import { FiEye, FiEdit, FiTrash2, FiSearch, FiPlus } from 'react-icons/fi';
 
 const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
-  <div className="bg-white shadow sm:rounded-lg">
+  <div className="bg-white shadow-md rounded-lg overflow-hidden">
     <table className="min-w-full divide-y divide-gray-200">
-      <thead>
+      <thead className="bg-gray-50">
         <tr>
           {['Class Name', 'Fees', 'Actions'].map((header) => (
-            <th key={header} className="px-6 py-3 text-xs font-bold uppercase">{header}</th>
+            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{header}</th>
           ))}
         </tr>
       </thead>
       <tbody className="bg-white divide-y divide-gray-200">
         {classes.map((classItem) => (
-          <tr key={classItem.id}>
-            <td className="border p-3 text-lg font-semibold">{classItem.name}</td>
-            <td className="border p-3 text-lg font-semibold">{classItem.class_fees.toFixed(2)} €</td>
-            <td className="border p-3 text-lg flex justify-center">
-              <button onClick={() => onViewClass(classItem)} className="mr-2 text-blue-500">View</button>
-              <button onClick={() => onEditClass(classItem)} className="mr-2 text-green-500">Edit</button>
-              <button onClick={() => onDeleteClass(classItem.id)} className="text-red-500">Delete</button>
+          <tr key={classItem.id} className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{classItem.name}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{classItem.class_fees.toFixed(2)} €</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button onClick={() => onViewClass(classItem)} className="text-blue-600 hover:text-blue-900 mr-3">
+                <FiEye className="inline-block mr-1" /> View
+              </button>
+              <button onClick={() => onEditClass(classItem)} className="text-green-600 hover:text-green-900 mr-3">
+                <FiEdit className="inline-block mr-1" /> Edit
+              </button>
+              <button onClick={() => onDeleteClass(classItem.id)} className="text-red-600 hover:text-red-900">
+                <FiTrash2 className="inline-block mr-1" /> Delete
+              </button>
             </td>
           </tr>
         ))}
@@ -31,10 +38,24 @@ const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
 );
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
-  <div className="mt-4">
-    <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
-    <span className="mx-2">{currentPage} / {totalPages}</span>
-    <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
+  <div className="mt-4 flex items-center justify-center">
+    <button 
+      onClick={() => onPageChange(currentPage - 1)} 
+      disabled={currentPage === 1}
+      className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Previous
+    </button>
+    <span className="mx-4 text-sm text-gray-700">
+      Page {currentPage} of {totalPages}
+    </span>
+    <button 
+      onClick={() => onPageChange(currentPage + 1)} 
+      disabled={currentPage === totalPages}
+      className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Next
+    </button>
   </div>
 );
 
@@ -90,17 +111,25 @@ const Classes = () => {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Class List</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Class Management</h1>
 
-      <div className="mb-4">
-        <button onClick={() => setIsAdding(true)} className="bg-green-500 text-white p-2 rounded">Add Class</button>
-        <input
-          type="text"
-          placeholder="Search for a class..."
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="ml-4 p-2 border rounded"
-        />
+      <div className="mb-6 flex items-center justify-between">
+        <button 
+          onClick={() => setIsAdding(true)} 
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center"
+        >
+          <FiPlus className="mr-2" /> Add Class
+        </button>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search for a class..."
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
       </div>
 
       <ClassTable
@@ -112,7 +141,6 @@ const Classes = () => {
 
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
 
-      {/* View Class Modal */}
       {selectedClass && !isEditing && (
         <ViewClass
           classDetails={selectedClass}
@@ -120,7 +148,6 @@ const Classes = () => {
         />
       )}
 
-      {/* Edit Class Modal */}
       {isEditing && (
         <EditClass
           classDetails={selectedClass}
@@ -128,7 +155,6 @@ const Classes = () => {
         />
       )}
 
-      {/* Add Class Modal */}
       {isAdding && (
         <AddClass onAddClass={handleAddClass} onClose={() => setIsAdding(false)} />
       )}

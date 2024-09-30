@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import { FiX, FiBook, FiDollarSign } from 'react-icons/fi';
 
 const AddClass = ({ onAddClass, onClose }) => {
   const [className, setClassName] = useState('');
-  const [capacity, setCapacity] = useState('');
   const [classFees, setClassFees] = useState('');
   const [error, setError] = useState('');
 
@@ -11,7 +11,7 @@ const AddClass = ({ onAddClass, onClose }) => {
     e.preventDefault();
     setError('');
 
-    if (!className  || !classFees) {
+    if (!className || !classFees) {
       setError('All fields are required.');
       return;
     }
@@ -19,11 +19,11 @@ const AddClass = ({ onAddClass, onClose }) => {
     const parsedClassFees = parseFloat(classFees);
 
     if (isNaN(parsedClassFees)) {
-      setError('Capacity and Class Fees must be valid numbers.');
+      setError('Class Fees must be a valid number.');
       return;
     }
 
-    if ( parsedClassFees < 0) {
+    if (parsedClassFees < 0) {
       setError('Class Fees must be non-negative.');
       return;
     }
@@ -38,41 +38,63 @@ const AddClass = ({ onAddClass, onClose }) => {
   };
 
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-      <div style={{ margin: '100px auto', padding: '20px', background: '#fff', borderRadius: '5px', width: '300px' }}>
-        <h3 style={{ marginBottom: '10px', textAlign: 'center' }}>Add New Class</h3>
-        <form onSubmit={handleSubmit}>
-          {error && <p style={{ color: 'red', fontSize: '12px', textAlign: 'center' }}>{error}</p>}
-          <input
-            type="text"
-            value={className}
-            onChange={(e) => setClassName(e.target.value)}
-            placeholder="Class Name"
-            style={{ width: '100%', padding: '8px', marginBottom: '10px', borderRadius: '3px', border: '1px solid #ccc' }}
-            required
-          />
-          <input
-            type="number"
-            value={classFees}
-            onChange={(e) => setClassFees(e.target.value)}
-            placeholder="Class Fees"
-            style={{ width: '100%', padding: '8px', marginBottom: '10px', borderRadius: '3px', border: '1px solid #ccc' }}
-            step="0.01"
-            required
-          />
-          <button
-            type="submit"
-            style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
-          >
-            Add Class
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-gray-900">Add New Class</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <FiX className="h-6 w-6" />
           </button>
+        </div>
+        {error && <p className="text-red-500 text-sm mb-4 bg-red-100 p-2 rounded">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="className" className="block text-sm font-medium text-gray-700 mb-1">Class Name</label>
+            <div className="relative">
+              <FiBook className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                id="className"
+                type="text"
+                value={className}
+                onChange={(e) => setClassName(e.target.value)}
+                placeholder="Enter class name"
+                className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="classFees" className="block text-sm font-medium text-gray-700 mb-1">Class Fees</label>
+            <div className="relative">
+              <FiDollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                id="classFees"
+                type="number"
+                value={classFees}
+                onChange={(e) => setClassFees(e.target.value)}
+                placeholder="Enter class fees"
+                className="pl-10 w-full p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Add Class
+            </button>
+          </div>
         </form>
-        <button
-          onClick={onClose}
-          style={{ marginTop: '10px', width: '100%', padding: '10px', backgroundColor: '#ccc', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
-        >
-          Close
-        </button>
       </div>
     </div>
   );

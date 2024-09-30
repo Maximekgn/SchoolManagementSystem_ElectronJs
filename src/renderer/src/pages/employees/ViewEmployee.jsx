@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { FiX, FiUser, FiBriefcase, FiPhone } from 'react-icons/fi';
 
 const ViewEmployee = ({ employee, onClose }) => {
   const formatDate = (dateString) => {
@@ -7,7 +8,6 @@ const ViewEmployee = ({ employee, onClose }) => {
     return date.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  // Close on 'Esc' key press
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.key === 'Escape') {
@@ -18,100 +18,70 @@ const ViewEmployee = ({ employee, onClose }) => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [onClose]);
 
+  const InfoSection = ({ title, icon, children }) => (
+    <div className="mb-8">
+      <h3 className="text-xl font-semibold text-indigo-700 mb-4 flex items-center">
+        {icon}
+        <span className="ml-2">{title}</span>
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {children}
+      </div>
+    </div>
+  );
+
+  const InfoItem = ({ label, value }) => (
+    <div className="bg-white p-4 rounded-lg shadow-md">
+      <p className="text-sm font-medium text-gray-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-gray-800">{value || 'N/A'}</p>
+    </div>
+  );
+
   return (
     <div 
-      className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
+      className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out"
       role="dialog" 
       aria-labelledby="employee-details-title" 
       aria-modal="true"
     >
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl transform transition-all duration-300 ease-out scale-95 sm:scale-100">
+      <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-4xl max-h-90vh overflow-y-auto transform transition-all duration-300 ease-out scale-95 sm:scale-100">
         <div className="flex justify-between items-center mb-6">
-          <h2 id="employee-details-title" className="text-2xl font-bold text-gray-800">Employee Details</h2>
+          <h2 id="employee-details-title" className="text-3xl font-bold text-indigo-800">Employee Details</h2>
           <button 
             onClick={onClose} 
-            className="text-gray-600 hover:text-gray-800" 
+            className="text-gray-500 hover:text-indigo-700 transition-colors duration-200" 
             aria-label="Close employee details"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <FiX className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
-          {/* Personal Information */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Personal Information</h3>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">First Name</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.name || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Last Name</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.surname || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Date of Birth</p>
-            <p className="mt-1 text-sm text-gray-900">{formatDate(employee.birthDate)|| 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Gender</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.gender || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Nationality</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.nationality || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Religion</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.religion || 'N/A'}</p>
-          </div>
+        <InfoSection title="Personal Information" icon={<FiUser className="text-indigo-600" />}>
+          <InfoItem label="First Name" value={employee.name} />
+          <InfoItem label="Last Name" value={employee.surname} />
+          <InfoItem label="Date of Birth" value={formatDate(employee.birthDate)} />
+          <InfoItem label="Gender" value={employee.gender} />
+          <InfoItem label="Nationality" value={employee.nationality} />
+          <InfoItem label="Religion" value={employee.religion} />
+        </InfoSection>
 
-          {/* Employment Information */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Employment Information</h3>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Employee Role</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.role || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Date of Joining</p>
-            <p className="mt-1 text-sm text-gray-900">{formatDate(employee.joinDate) || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Monthly Salary</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.salary ? `FCFA ${employee.salary}` : 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Experience</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.experience || 'N/A'}</p>
-          </div>
+        <InfoSection title="Employment Information" icon={<FiBriefcase className="text-indigo-600" />}>
+          <InfoItem label="Employee Role" value={employee.role} />
+          <InfoItem label="Date of Joining" value={formatDate(employee.joinDate)} />
+          <InfoItem label="Monthly Salary" value={employee.salary ? `FCFA ${employee.salary}` : 'N/A'} />
+          <InfoItem label="Experience" value={employee.experience} />
+        </InfoSection>
 
-          {/* Contact Information */}
-          <div className="col-span-2">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">Contact Information</h3>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Mobile Number</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.phone || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Email</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.email || 'N/A'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Address</p>
-            <p className="mt-1 text-sm text-gray-900">{employee.address || 'N/A'}</p>
-          </div>
-        </div>
+        <InfoSection title="Contact Information" icon={<FiPhone className="text-indigo-600" />}>
+          <InfoItem label="Mobile Number" value={employee.phone} />
+          <InfoItem label="Email" value={employee.email} />
+          <InfoItem label="Address" value={employee.address} />
+        </InfoSection>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-8 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-300"
+            className="bg-indigo-600 text-white px-6 py-3 rounded-lg text-lg font-semibold hover:bg-indigo-700 transition duration-300 shadow-md hover:shadow-lg"
           >
             Close
           </button>

@@ -2,28 +2,35 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AddEmployeeForm from './AddEmployeeForm';
 import ViewEmployee from './ViewEmployee';
 import EditEmployee from './EditEmployee';
+import { FiEye, FiEdit, FiTrash2, FiSearch, FiUserPlus } from 'react-icons/fi';
 
 const EmployeeTable = ({ employees, onViewEmployee, onEditEmployee, onDeleteEmployee }) => (
-  <div className="bg-white shadow sm:rounded-lg">
+  <div className="bg-white shadow-md rounded-lg overflow-hidden">
     <table className="min-w-full divide-y divide-gray-200">
-      <thead>
+      <thead className="bg-gray-50">
         <tr>
           {['Name', 'Surname', 'Role', 'Phone', 'Actions'].map((header) => (
-            <th key={header} className="px-6 py-3 text-xs font-bold uppercase">{header}</th>
+            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{header}</th>
           ))}
         </tr>
       </thead>
-      <tbody className='bg-white divide-y divide-gray-200'>
+      <tbody className="bg-white divide-y divide-gray-200">
         {employees.map((employee) => (
-          <tr key={employee.id}>
-            <td className="border p-3 text-lg font-semibold">{employee.name}</td>
-            <td className="border p-3 text-lg font-semibold">{employee.surname}</td>
-            <td className="border p-3 text-lg font-semibold">{employee.role}</td>
-            <td className="border p-3 text-lg font-semibold">{employee.phone || 'N/A'}</td>
-            <td className="border p-3 text-lg flex justify-center">
-              <button onClick={() => onViewEmployee(employee)} className="mr-2 text-blue-500">View</button>
-              <button onClick={() => onEditEmployee(employee)} className="mr-2 text-green-500">Edit</button>
-              <button onClick={() => onDeleteEmployee(employee.id)} className="text-red-500">Delete</button>
+          <tr key={employee.id} className="hover:bg-gray-50">
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{employee.name}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.surname}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.role}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{employee.phone || 'N/A'}</td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <button onClick={() => onViewEmployee(employee)} className="text-blue-600 hover:text-blue-900 mr-3">
+                <FiEye className="inline-block mr-1" /> View
+              </button>
+              <button onClick={() => onEditEmployee(employee)} className="text-green-600 hover:text-green-900 mr-3">
+                <FiEdit className="inline-block mr-1" /> Edit
+              </button>
+              <button onClick={() => onDeleteEmployee(employee.id)} className="text-red-600 hover:text-red-900">
+                <FiTrash2 className="inline-block mr-1" /> Delete
+              </button>
             </td>
           </tr>
         ))}
@@ -33,10 +40,24 @@ const EmployeeTable = ({ employees, onViewEmployee, onEditEmployee, onDeleteEmpl
 );
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
-  <div className="mt-4">
-    <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
-    <span className="mx-2">{currentPage} / {totalPages}</span>
-    <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
+  <div className="mt-4 flex items-center justify-center">
+    <button 
+      onClick={() => onPageChange(currentPage - 1)} 
+      disabled={currentPage === 1}
+      className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Previous
+    </button>
+    <span className="mx-4 text-sm text-gray-700">
+      Page {currentPage} of {totalPages}
+    </span>
+    <button 
+      onClick={() => onPageChange(currentPage + 1)} 
+      disabled={currentPage === totalPages}
+      className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Next
+    </button>
   </div>
 );
 
@@ -93,17 +114,25 @@ const Employees = () => {
   );
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Employee List</h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">Employee Management</h1>
 
-      <div className="mb-4">
-        <button onClick={() => setIsAdding(true)} className="bg-blue-500 text-white p-2 rounded">Add Employee</button>
-        <input
-          type="text"
-          placeholder="Search for an employee..."
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="ml-4 p-2 border rounded"
-        />
+      <div className="mb-6 flex items-center justify-between">
+        <button 
+          onClick={() => setIsAdding(true)} 
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center"
+        >
+          <FiUserPlus className="mr-2" /> Add Employee
+        </button>
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search for an employee..."
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
       </div>
 
       <EmployeeTable
@@ -131,7 +160,7 @@ const Employees = () => {
       )}
 
       {isAdding && (
-        <AddEmployeeForm onAdd={handleAddEmployee} onClose={() => setIsAdding(false)} />
+        <AddEmployeeForm onAdd={handleAddEmployee} onClose={() => { setIsAdding(false); fetchEmployees(); }} />
       )}
     </div>
   );

@@ -782,9 +782,10 @@ ipcMain.handle("get-payments", async (event, student_id) => {
 // Add a new payment
 ipcMain.handle("make-payment", async (event, newPayment) => {
   return new Promise((resolve, reject) => {
-    const query = 'INSERT INTO student_payments (title, student_id, payment_maker, payment_date, amount_paid) VALUES (?, ?, ?, ?, ?)';
-    const { title, student_id, payment_maker, payment_date, amount_paid } = newPayment;
-    database.run(query, [title, student_id, payment_maker, payment_date, amount_paid], function(err) {
+    console.log("Received payment data:", newPayment);
+    const query = 'INSERT INTO student_payments (title, student_id, discount, payment_date, amount_paid) VALUES (?, ?, ?, ?, ?)';
+    const { title, student_id, discount, payment_date, amount_paid } = newPayment;
+    database.run(query, [title, student_id, discount, payment_date, amount_paid], function(err) {
       if (err) {
         console.error('Error adding payment:', err.message);
         reject({ success: false, error: err.message });
@@ -792,15 +793,18 @@ ipcMain.handle("make-payment", async (event, newPayment) => {
         resolve({ success: true, insertedId: this.lastID });
       }
     });
-    // augmenter paidFee dans la table student
-    const query2 = 'UPDATE students SET paidFee = paidFee + ? WHERE id = ?';
-    database.run(query2, [amount_paid, student_id], function(err) {
+    if (newPayment.title.toLowerCase() =="Tuition fee".toLowerCase()) 
+    {
+      // augmenter paidFee dans la table student
+      const query2 = 'UPDATE students SET paidFee = paidFee + ? WHERE id = ?';
+      database.run(query2, [amount_paid, student_id], function(err) {
       if (err) {
         console.error('Error adding payment:', err.message);
         reject({ success: false, error: err.message });
       } else {
         resolve({ success: true, insertedId: this.lastID });
       }
-    });
+      });
+    }
   });
 });

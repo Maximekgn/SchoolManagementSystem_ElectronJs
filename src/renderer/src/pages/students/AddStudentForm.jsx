@@ -156,6 +156,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
       )}
       {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]}</p>}
     </div>
+    
   );
 
   return (
@@ -214,6 +215,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
             </button>
           </div>
         </form>
+        
       </div>
     </div>
   );

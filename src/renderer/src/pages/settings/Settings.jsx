@@ -1,30 +1,77 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { FiTrash2, FiDownload, FiAlertTriangle } from 'react-icons/fi';
 
 const Settings = () => {
-  // Function to handle Reset Data click
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
   const handleResetData = () => {
-    // Send a message to the main process to reset the database
+    setShowConfirmation(true);
+  };
+
+  const confirmResetData = () => {
     window.electron.ipcRenderer.invoke('reset-database')
       .then(response => {
-        alert(response);  // Show success message when database is reset
+        alert(response);
+        setShowConfirmation(false);
       })
       .catch(error => {
         console.error('Error resetting database:', error);
+        setShowConfirmation(false);
       });
   };
 
   return (
-    <div className="flex flex-col items-center p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
-      <button 
-        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full mb-4"
-        onClick={handleResetData} // Attach the click handler here
-      >
-        RESET DATA
-      </button>
-      <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full">
-        EXPORT DATA
-      </button>
+    <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg">
+      <h1 className="text-4xl font-bold mb-8 text-gray-800 border-b pb-4">Settings</h1>
+      
+      <div className="space-y-6">
+        <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+          <div>
+            <h2 className="text-xl font-semibold text-red-700 mb-2">Reset Data</h2>
+            <p className="text-red-600">Warning: This action will delete all data and cannot be undone.</p>
+          </div>
+          <button 
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out flex items-center"
+            onClick={handleResetData}
+          >
+            <FiTrash2 className="mr-2" /> Reset Data
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+          <div>
+            <h2 className="text-xl font-semibold text-green-700 mb-2">Export Data</h2>
+            <p className="text-green-600">Download a backup of all your data.</p>
+          </div>
+          <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out flex items-center">
+            <FiDownload className="mr-2" /> Export Data
+          </button>
+        </div>
+      </div>
+
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-lg max-w-md">
+            <FiAlertTriangle className="text-5xl text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-4 text-center">Confirm Data Reset</h2>
+            <p className="mb-6 text-center">Are you sure you want to reset all data? This action cannot be undone.</p>
+            <div className="flex justify-center space-x-4">
+              <button 
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                onClick={confirmResetData}
+              >
+                Yes, Reset Data
+              </button>
+              <button 
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                onClick={() => setShowConfirmation(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
