@@ -559,6 +559,16 @@ ipcMain.handle("update-class", async (event, formData) => {
           resolve({ success: true, updatedId: this.lastID });
         }
       });
+    // update all student school_fee who are in this class
+    const query2 = 'UPDATE students SET schoolFee = ? WHERE classId = ?';
+    database.run(query2, [class_fees, id], function(err) {
+      if (err) {
+        console.error("Error updating class:", err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, updatedId: this.lastID });
+      }
+    });
     });
   } catch (error) {
     return { success: false, error: error.message };
