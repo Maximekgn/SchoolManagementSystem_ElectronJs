@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FiX, FiDollarSign, FiCalendar, FiUser, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { FiX, FiCalendar, FiChevronDown, FiChevronUp, FiPercent, FiEdit, FiDollarSign } from 'react-icons/fi';
 
 const ViewPayments = ({ studentId, onClose }) => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [editingPayment, setEditingPayment] = useState(null);
 
   const fetchPayments = useCallback(async () => {
     try {
@@ -40,6 +41,28 @@ const ViewPayments = ({ studentId, onClose }) => {
       ...prev,
       [category]: !prev[category]
     }));
+  };
+
+  const handleEditPayment = (payment) => {
+    setEditingPayment(payment);
+  };
+
+  const handleSaveEdit = async (editedPayment) => {
+    try {
+      editedPayment.amount_paid = editedPayment.amount - editedPayment.discount;
+      const result = await window.electron.ipcRenderer.invoke('edit-payment', editedPayment);
+      if (result.success) {
+        setEditingPayment(null);
+        // Update the payments state locally instead of fetching again
+        setPayments(prevPayments => prevPayments.map(payment => 
+          payment.id === editedPayment.id ? editedPayment : payment
+        ));
+      } else {
+        setError('Failed to edit payment.');
+      }
+    } catch (error) {
+      setError('Error while editing payment.');
+    }
   };
 
   if (loading) {
@@ -86,7 +109,6 @@ const ViewPayments = ({ studentId, onClose }) => {
                   <h3 className="font-semibold text-lg text-indigo-600">{category}</h3>
                   <div className="flex items-center">
                     <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-medium mr-2">
-                      <FiDollarSign className="inline-block mr-1" />
                       {categoryPayments.reduce((sum, payment) => sum + payment.amount_paid, 0)} FCFA
                     </span>
                     <button 
@@ -101,14 +123,61 @@ const ViewPayments = ({ studentId, onClose }) => {
                   <ul className="mt-2 space-y-2">
                     {categoryPayments.map((payment) => (
                       <li key={payment.id} className="bg-white rounded p-2 shadow-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-600">{new Date(payment.payment_date).toLocaleDateString()}</span>
-                          <span className="font-medium">{payment.amount_paid} FCFA</span>
-                        </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          <FiUser className="inline-block mr-1" />
-                          {payment.payment_maker}
-                        </p>
+                        {editingPayment && editingPayment.id === payment.id ? (
+                          <div className="space-y-2">
+                            <input
+                              type="date"
+                              value={editingPayment.payment_date}
+                              onChange={(e) => setEditingPayment({...editingPayment, payment_date: e.target.value})}
+                              className="w-full p-2 border rounded"
+                            />
+                            <input
+                              type="number"
+                              value={editingPayment.amount}
+                              onChange={(e) => setEditingPayment({...editingPayment, amount: parseFloat(e.target.value)})}
+                              className="w-full p-2 border rounded"
+                            />
+                            <input
+                              type="number"
+                              value={editingPayment.discount}
+                              onChange={(e) => setEditingPayment({...editingPayment, discount: parseFloat(e.target.value)})}
+                              className="w-full p-2 border rounded"
+                            />
+                            <div className="flex justify-end space-x-2">
+                              <button onClick={() => handleSaveEdit(editingPayment)} className="px-4 py-2 bg-green-500 text-white rounded">Save</button>
+                              <button onClick={() => setEditingPayment(null)} className="px-4 py-2 bg-gray-300 text-gray-700 rounded">Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="flex items-center">
+                                <FiCalendar className="mr-2 text-gray-500" />
+                                <span className="text-gray-600">Date:</span>
+                              </div>
+                              <span>{new Date(payment.payment_date).toLocaleDateString()}</span>
+                              
+                              <div className="flex items-center">
+                                <FiDollarSign className="mr-2 text-gray-500" />
+                                <span className="text-gray-600">Amount:</span>
+                              </div>
+                              <span>{payment.amount} FCFA</span>
+                              
+                              <div className="flex items-center">
+                                <FiPercent className="mr-2 text-orange-500" />
+                                <span className="text-gray-600">Discount:</span>
+                              </div>
+                              <span className="text-orange-500">{payment.discount || 0} FCFA</span>
+                            </div>
+                            <button 
+                              onClick={() => handleEditPayment(payment)}
+                              className="mt-2 text-indigo-600 hover:text-indigo-800 flex items-center"
+                            >
+                              <FiEdit className="mr-1" />
+                              Edit
+                            </button>
+                          </>
+                        )}
                       </li>
                     ))}
                   </ul>

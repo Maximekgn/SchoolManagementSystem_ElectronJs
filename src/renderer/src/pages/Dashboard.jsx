@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FaUserGraduate, FaChalkboardTeacher, FaUsers, FaSchool } from 'react-icons/fa';
+import { FaUserGraduate, FaChalkboardTeacher, FaUsers, FaSchool ,FaMoneyBill } from 'react-icons/fa';
 
 const Dashboard = () => {
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalTeachers, setTotalTeachers] = useState(0);
   const [totalEmployees, setTotalEmployees] = useState(0);
   const [totalClasses, setTotalClasses] = useState(0);
+  const [studentsPayments, setStudentsPayments] = useState([]);
+  const [totalRegistrationsFee, setTotalRegistrationsFee] = useState(0);
+  const [totalTuitionFee, setTotalTuitionFee] = useState(0);
 
   const fetchData = useCallback(async () => {
     try {
@@ -28,6 +31,15 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
+
+    const payments = await window.electron.ipcRenderer.invoke('get-all-payments');
+    if (payments) {
+      console.log(payments);
+      setTotalRegistrationsFee(payments.filter(payment => payment.title.toLowerCase().trim() === 'registration fee').reduce((sum, payment) => sum + payment.amount_paid, 0));
+      setTotalTuitionFee(payments.filter(payment => payment.title.toLowerCase().trim() === 'tuition fee').reduce((sum, payment) => sum + payment.amount_paid, 0));
+    }
+
+    
   }, []);
 
   useEffect(() => {
@@ -55,6 +67,8 @@ const Dashboard = () => {
         <StatCard title="Total Teachers" value={totalTeachers} icon={<FaChalkboardTeacher />} />
         <StatCard title="Total Employees" value={totalEmployees} icon={<FaUsers />} />
         <StatCard title="Total Classes" value={totalClasses} icon={<FaSchool />} />
+        <StatCard title="Total Registrations Fee" value={'FCFA '+ totalRegistrationsFee} icon={<FaMoneyBill />} />
+        <StatCard title="Total Tuition Fee" value={'FCFA ' + totalTuitionFee.toLocaleString('en-US').replace(/,/g, '.')} icon={<FaMoneyBill />} />
       </div>
     </div>
   );

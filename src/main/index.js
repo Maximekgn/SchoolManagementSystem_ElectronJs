@@ -566,65 +566,8 @@ ipcMain.handle("update-class", async (event, formData) => {
 });
 
 
-/* ----------------PAYEMENTS ----------------------*/
-/* 
-  student_payments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  student_id INTEGER NOT NULL,
-  payement_maker TEXT NOT NULL,
-  payment_date DATE NOT NULL,
-  amount_paid REAL NOT NULL,
-  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
-  employee_salaries (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  employee_id INTEGER NOT NULL,
-  salary_month TEXT NOT NULL,
-  salary_paid REAL NOT NULL,
-  payment_date DATE NOT NULL,
-  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
-*/
-//add student payement 
-ipcMain.handle("add-student-payement", async (event, newPayement) => {
-  return new Promise((resolve, reject) => {
-    const query = 'INSERT INTO student_payments (title, student_id, payement_maker, payment_date, amount_paid) VALUES (?, ?, ?, ?, ?)';
-    const { title, student_id, payement_maker, payment_date, amount_paid } = newPayement;
-    database.run(query, [title, student_id, payement_maker, payment_date, amount_paid], function(err) {
-      if (err) {
-        console.error('Error adding student payement:', err.message);
-        reject({ success: false, error: err.message });
-      } else {
-        resolve({ success: true, insertedId: this.lastID });
-      }
-    });
-  });
-})
-
-//add employee payement 
-ipcMain.handle("add-employee-payement", async (event, newPayement) => {
-  return new Promise((resolve, reject) => {
-    const query = 'INSERT INTO employee_salaries (employee_id, salary_month, salary_paid, payment_date) VALUES (?, ?, ?, ?)';
-    const { employee_id, salary_month, salary_paid, payment_date } = newPayement;
-    database.run(query, [employee_id, salary_month, salary_paid, payment_date], function(err) {
-      if (err) {
-        console.error('Error adding employee payement:', err.message);
-        reject({ success: false, error: err.message });
-      } else {
-        resolve({ success: true, insertedId: this.lastID });
-      }
-    });
-  });
-})
-
-
-
-
-
-
-
-
-
 // Handle database reset
+
 ipcMain.handle('reset-database', async () => {
   try {
     let dbPath, sqlFilePath;
@@ -700,20 +643,34 @@ ipcMain.handle('reset-database', async () => {
 
 
 
-
-/*-------------------PAYEMENTS----------------- */
+/* ----------------PAYEMENTS ----------------------*/
 /* 
-  CREATE TABLE IF NOT EXISTS student_payments (
+ CREATE TABLE IF NOT EXISTS student_payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   student_id INTEGER NOT NULL,
-  payement_maker TEXT NOT NULL,
   payment_date DATE NOT NULL,
+  amount REAL NOT NULL,
   amount_paid REAL NOT NULL,
+  discount REAL DEFAULT 0,
+  description TEXT,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
-
 */
+
+//get all payments
+ipcMain.handle("get-all-payments", async (event, args) => {
+  return new Promise((resolve, reject) => {
+    database.all("SELECT * FROM student_payments", (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+});
+
 //get student payements
 ipcMain.handle("get-payments", async (event, student_id) => {
   return new Promise((resolve, reject) => {
@@ -733,9 +690,9 @@ ipcMain.handle("get-payments", async (event, student_id) => {
 ipcMain.handle("make-payment", async (event, newPayment) => {
   return new Promise((resolve, reject) => {
     console.log("Received payment data:", newPayment);
-    const query = 'INSERT INTO student_payments (title, student_id, discount, payment_date, amount_paid) VALUES (?, ?, ?, ?, ?)';
-    const { title, student_id, discount, payment_date, amount_paid } = newPayment;
-    database.run(query, [title, student_id, discount, payment_date, amount_paid], function(err) {
+    const query = 'INSERT INTO student_payments (title, student_id, discount, payment_date, amount_paid ,amount) VALUES (?, ?, ?, ?, ?,?)';
+    const { title, student_id, discount, payment_date, amount_paid ,amount} = newPayment;
+    database.run(query, [title, student_id, discount, payment_date, amount_paid ,amount], function(err) {
       if (err) {
         console.error('Error adding payment:', err.message);
         reject({ success: false, error: err.message });
@@ -758,3 +715,35 @@ ipcMain.handle("make-payment", async (event, newPayment) => {
     }
   });
 });
+
+//to edit a payment
+ipcMain.handle("edit-payment", async (event, editedPayment) => {
+  return new Promise((resolve, reject) => {
+    const query = 'UPDATE student_payments SET title = ?, student_id = ?, discount = ?, payment_date = ?, amount_paid = ? , amount = ? WHERE id = ?';
+    const { id, title, student_id, discount, payment_date, amount_paid , amount} = editedPayment;
+    database.run(query, [title, student_id, discount, payment_date, amount_paid , amount, id], function(err) {
+      if (err) {
+        console.error('Error editing payment:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, updatedId: this.lastID });
+      }
+    });
+    if (editedPayment.title.toLowerCase() =="Tuition fee".toLowerCase()) 
+    {
+      // augmenter paidFee dans la table student
+      const query2 = 'UPDATE students SET paidFee = paidFee + ? WHERE id = ?';
+      database.run(query2, [amount_paid, student_id], function(err) {
+      if (err) {
+        console.error('Error adding payment:', err.message);
+        reject({ success: false, error: err.message });
+      }
+    });
+    }
+  });
+
+});
+
+
+
+  

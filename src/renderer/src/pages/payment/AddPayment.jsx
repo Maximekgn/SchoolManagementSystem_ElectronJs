@@ -3,7 +3,7 @@ import { FiDollarSign, FiUser, FiCalendar, FiX } from 'react-icons/fi';
 
 const AddPayment = ({ studentId, onClose }) => {
   const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [error, setError] = useState('');
@@ -21,7 +21,8 @@ const AddPayment = ({ studentId, onClose }) => {
       title,
       student_id: studentId,
       payment_date: paymentDate,
-      amount_paid: amount,
+      amount: amount,
+      amount_paid: amount - discount,
       discount: discount,
     };
 
