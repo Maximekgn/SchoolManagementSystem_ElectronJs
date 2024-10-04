@@ -4,29 +4,19 @@ const log = require('electron-log');
 const path = require("path");
 const fs = require("fs");
 const sqlite = require("sqlite3");
-const fse = require("fs-extra");
 const ipcMain = electron.ipcMain;
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
-import express from 'express';
- 
-let mainWindow , CourseWindow;
-function createWindow() {
-  if (!is.dev) {
-    const exApp = express();
-    exApp.use(express.static(path.join(__dirname, '../renderer/')));
-    exApp.listen(5173, () => {
-      log.info('Express server started on port 5173');
-    });
-  }
 
+let mainWindow;
+function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
+    width: 1200,
     height: 670,
     show: false,
-    frame: true, // Changed to true to show default window frame
-    autoHideMenuBar: true, // Changed to false to show menu bar
+    frame: true,
+    autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon: path.join(__dirname, 'path/to/icon.png') } : {}),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
@@ -56,8 +46,6 @@ function createWindow() {
 
   return mainWindow;
 }
-
-
 
 app.whenReady().then(() => {
   log.info("Ready")
@@ -120,62 +108,11 @@ ipcMain.handle("maximize", () => {
   }
 });
 
-ipcMain.handle("showDialog", async (event, args) => {
-  let win = null;
-  switch (args.window) {
-    case "mainWindow":
-      win = mainWindow;
-      break;
-    case "CourseWindow":
-      win = CourseWindow;
-      break;
-    default:
-      break;
-  }
-
-  return dialog.showMessageBox(win, args.options);
-});
-
-ipcMain.handle("saveFile", async (event, args) => {
-  let options = {
-    title: "Save files",
-
-    defaultPath: app.getPath("downloads"),
-
-    buttonLabel: "Save Output File",
-
-    properties: ["openDirectory"],
-  };
-
-  let filename = await dialog.showOpenDialog(mainWindow, options);
-  if (!filename.canceled) {
-    var base64Data = args.replace(/^data:application\/pdf;base64,/, "");
-    
-    const p = path.join(filename.filePaths[0], "/exampaper")
-    if (!fs.existsSync(p)){
-      fs.mkdirSync(p);
-    }
-    fs.writeFileSync(
-      path.join(p, "output.pdf"),
-      base64Data,
-      "base64"
-    );
-
-
-    fse.copySync("input", path.join(p,"input"))
-      
-  }
-});
-
 // Function To Close Window
 ipcMain.handle("close", (event, args) => {
   switch (args) {
     case "mainWindow":
       app.quit();
-      break;
-    case "CourseWindow":
-      mainWindow.webContents.send("reload");
-      CourseWindow.close();
       break;
     default:
       break;
@@ -183,31 +120,6 @@ ipcMain.handle("close", (event, args) => {
 });
 
 //---------------------STUDENTS-----------------------------
-/*
-  CREATE TABLE IF NOT EXISTS students (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  surname TEXT NOT NULL,
-  name TEXT NOT NULL,
-  birthDate DATE NOT NULL,
-  birthPlace TEXT,
-  gender TEXT NOT NULL DEFAULT 'Other',
-  regNumber TEXT ,
-  admissionDate DATE NOT NULL,
-  classId INTEGER,
-  discountFee REAL DEFAULT 0,
-  schoolFee REAL DEFAULT 0,
-  paidFee REAL DEFAULT 0,
-  bloodGroup TEXT ,
-  medicalCondition TEXT,
-  previousSchool TEXT,
-  religion TEXT,
-  additionalNote TEXT,
-  parentName TEXT,
-  parentSurname TEXT,
-  parentPhone TEXT,
-  FOREIGN KEY (classId) REFERENCES classes(id) ON DELETE SET NULL
-);
-*/
 //get all students
 ipcMain.handle("get-students", (event, args) => {
   return new Promise((resolve, reject) => {
@@ -237,14 +149,14 @@ ipcMain.handle("add-student", async (event, formData) => {
   return new Promise((resolve, reject) => {
     const query = `INSERT INTO students (
       name, surname, birthDate, birthPlace, gender, admissionDate, classId, 
-      discountFee, schoolFee, paidFee, bloodGroup, medicalCondition, 
+       schoolFee, paidFee, bloodGroup, medicalCondition, 
       previousSchool, religion, additionalNote, parentName, parentSurname, parentPhone
     ) VALUES (${',?'.repeat(18).slice(1)})`;
 
     const values = [
       formData.name, formData.surname, formData.birthDate, formData.birthPlace,
-      formData.gender, formData.admissionDate, formData.classId, formData.discountFee,
-      formData.schoolFee, formData.paidFee, formData.bloodGroup, formData.medicalCondition,
+      formData.gender, formData.admissionDate, formData.classId, formData.schoolFee,
+      formData.paidFee, formData.bloodGroup, formData.medicalCondition,
       formData.previousSchool, formData.religion, formData.additionalNote,
       formData.parentName, formData.parentSurname, formData.parentPhone
     ];
@@ -261,16 +173,13 @@ ipcMain.handle("add-student", async (event, formData) => {
   });
 });
 
-
-
-
 // update a student
 ipcMain.handle("update-student", async (event, formData) => {
   try {
     const query = `
       UPDATE students SET
         surname = ?, name = ?, birthDate = ?, birthPlace = ?, gender = ?,
-        regNumber = ?, admissionDate = ?, classId = ?, discountFee = ?,
+        regNumber = ?, admissionDate = ?, classId = ?,
         schoolFee = ?, paidFee = ?, bloodGroup = ?, medicalCondition = ?,
         previousSchool = ?, religion = ?, additionalNote = ?,
         parentName = ?, parentSurname = ?, parentPhone = ?
@@ -279,7 +188,7 @@ ipcMain.handle("update-student", async (event, formData) => {
 
     const {
       surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, 
-      classId, discountFee, schoolFee, paidFee, bloodGroup, medicalCondition, 
+      classId,  schoolFee, paidFee, bloodGroup, medicalCondition, 
       previousSchool, religion, additionalNote, parentName, parentSurname, 
       parentPhone, id
     } = formData;
@@ -287,7 +196,7 @@ ipcMain.handle("update-student", async (event, formData) => {
     return new Promise((resolve, reject) => {
       database.run(query, [
         surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, 
-        classId, discountFee, schoolFee, paidFee, bloodGroup, medicalCondition, 
+        classId,  schoolFee, paidFee, bloodGroup, medicalCondition, 
         previousSchool, religion, additionalNote, parentName, parentSurname, 
         parentPhone, id
       ], function(err) {
@@ -304,7 +213,6 @@ ipcMain.handle("update-student", async (event, formData) => {
     return { success: false, error: error.message };
   }
 });
-
 
 //delete a student
 ipcMain.handle('delete-student', async (event, student_id) => {
@@ -326,26 +234,7 @@ ipcMain.handle('delete-student', async (event, student_id) => {
   });
 });
 
-
 //----------------------EMPLOYEES----------------------
-/*id INTEGER PRIMARY KEY AUTOINCREMENT,
-  surname TEXT NOT NULL,
-  name TEXT NOT NULL,
-  birthDate DATE,
-  gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')) DEFAULT 'Male',
-  regNumber TEXT UNIQUE,
-  picture BLOB,
-  nationalId TEXT UNIQUE,
-  phone TEXT UNIQUE,
-  nationality TEXT,
-  joinDate DATE NOT NULL,
-  role TEXT NOT NULL,
-  salary REAL DEFAULT 0,
-  experience TEXT,
-  religion TEXT,
-  email TEXT UNIQUE,
-  address TEXT*/
-
 //to get all employees
 ipcMain.handle("get-employees", (event, args) => {
   return new Promise((resolve, reject) => {
@@ -358,7 +247,6 @@ ipcMain.handle("get-employees", (event, args) => {
     });
   });
 })
-
 
 //to delete a employee
 ipcMain.handle('delete-employee', async (event, employeeId) => {
@@ -383,8 +271,6 @@ ipcMain.handle('delete-employee', async (event, employeeId) => {
 //to update an employee
 ipcMain.handle("update-employee", async (event, formData) => {
   try {
-    
-
     const query = `
       UPDATE employees SET 
         surname = ?, 
@@ -406,15 +292,15 @@ ipcMain.handle("update-employee", async (event, formData) => {
     `; 
 
     const {
-      surname, name  , birthDate, gender , regNumber
-      , nationalId, phone, nationality, joinDate, role ,
+      surname, name, birthDate, gender, regNumber,
+      nationalId, phone, nationality, joinDate, role,
       salary, experience, religion, email, address, id
-      } = formData;
+    } = formData;
 
     return new Promise((resolve, reject) => {
       database.run(query, [
-        surname, name  , birthDate, gender , regNumber ,
-        nationalId, phone, nationality, joinDate, role ,
+        surname, name, birthDate, gender, regNumber,
+        nationalId, phone, nationality, joinDate, role,
         salary, experience, religion, email, address, id
       ], function(err) {
         if (err) {
@@ -434,16 +320,12 @@ ipcMain.handle("update-employee", async (event, formData) => {
 ipcMain.handle("add-employee", async (event, newEmployee) => {
   return new Promise((resolve, reject) => {
     try {
-
-      // supprime date_of_birth
       delete newEmployee.date_of_birth;
       console.log("Received employee data:", newEmployee);
 
-
-      // Insérer les données de l'employé dans SQLite
       const insertQuery = `
         INSERT INTO employees (
-          name, surname, birthDate, gender, regNumber,  nationalId, 
+          name, surname, birthDate, gender, regNumber, nationalId, 
           phone, nationality, joinDate, role, salary, 
           experience, religion, email, address
         ) 
@@ -454,9 +336,8 @@ ipcMain.handle("add-employee", async (event, newEmployee) => {
               phone, nationality, joinDate, role, salary, 
               experience, religion, email, address } = newEmployee;
 
-      // Exécuter l'insertion dans la base de données
      database.run(insertQuery, [
-        name , surname, birthDate, gender, regNumber,  
+        name, surname, birthDate, gender, regNumber,  
         nationalId, phone, nationality, joinDate, role, 
         salary, experience, religion, email, address
       ], function (err) {
@@ -465,7 +346,6 @@ ipcMain.handle("add-employee", async (event, newEmployee) => {
           return reject("Failed to add employee to the database.");
         }
 
-        // Si insertion réussie, retourner l'ID de l'employé inséré
         resolve({ id: this.lastID, message: "Employee added successfully" });
       });
 
@@ -476,19 +356,7 @@ ipcMain.handle("add-employee", async (event, newEmployee) => {
   });
 });
 
-
-
-
-
 /* ---------------- CLASSEs ----------------*/
-/* 
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  capacity INTEGER NOT NULL,
-  class_fees REAL NOT NULL,
-  teacher_id INTEGER,
-  FOREIGN KEY (teacher_id) REFERENCES employees(id) ON DELETE SET NULL
-*/
 //to get all classes
 ipcMain.handle("get-classes", (event, args) => {
   return new Promise((resolve, reject) => {
@@ -539,7 +407,6 @@ ipcMain.handle('delete-class', async (event, classId) => {
 })
 
 // to update a class
-
 ipcMain.handle("update-class", async (event, formData) => {
   try {
     const query = `
@@ -549,7 +416,7 @@ ipcMain.handle("update-class", async (event, formData) => {
       WHERE id = ? 
     `; 
 
-    const { name, class_fees, id } = formData; // Make sure to extract class_fees as well
+    const { name, class_fees, id } = formData;
     return new Promise((resolve, reject) => {
       database.run(query, [name, class_fees, id], function(err) {
         if (err) {
@@ -575,9 +442,7 @@ ipcMain.handle("update-class", async (event, formData) => {
   }
 });
 
-
 // Handle database reset
-
 ipcMain.handle('reset-database', async () => {
   try {
     let dbPath, sqlFilePath;
@@ -601,14 +466,14 @@ ipcMain.handle('reset-database', async () => {
         // Disable foreign keys
         db.exec("PRAGMA foreign_keys = OFF;", (err) => {
           if (err) {
-            db.close();  // Ensure the database is closed on error
+            db.close();
             return reject(`Failed to disable foreign keys: ${err.message}`);
           }
 
           // Drop all existing tables
           db.all("SELECT name FROM sqlite_master WHERE type='table';", (err, tables) => {
             if (err) {
-              db.close();  // Ensure the database is closed on error
+              db.close();
               return reject(`Error fetching tables: ${err.message}`);
             }
 
@@ -640,7 +505,7 @@ ipcMain.handle('reset-database', async () => {
                 reject(err);
               })
               .finally(() => {
-                db.close();  // Always close the database when finished
+                db.close();
               });
           });
         });
@@ -651,23 +516,7 @@ ipcMain.handle('reset-database', async () => {
   }
 });
 
-
-
 /* ----------------PAYEMENTS ----------------------*/
-/* 
- CREATE TABLE IF NOT EXISTS student_payments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  title TEXT NOT NULL,
-  student_id INTEGER NOT NULL,
-  payment_date DATE NOT NULL,
-  amount REAL NOT NULL,
-  amount_paid REAL NOT NULL,
-  discount REAL DEFAULT 0,
-  description TEXT,
-  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
-);
-*/
-
 //get all payments
 ipcMain.handle("get-all-payments", async (event, args) => {
   return new Promise((resolve, reject) => {
@@ -751,9 +600,4 @@ ipcMain.handle("edit-payment", async (event, editedPayment) => {
     });
     }
   });
-
 });
-
-
-
-  

@@ -13,6 +13,7 @@
 /build
 /dist
 /out
+/ressources/database.db
 
 # misc
 .DS_Store

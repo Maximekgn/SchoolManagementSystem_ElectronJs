@@ -9,7 +9,7 @@ const EditClass = ({ classDetails, onClose }) => {
   useEffect(() => {
     if (classDetails) {
       setClassName(classDetails.name);
-      setClassFees(classDetails.class_fees); // Set initial fees value
+      setClassFees(classDetails.class_fees);
     }
   }, [classDetails]);
 
@@ -28,12 +28,12 @@ const EditClass = ({ classDetails, onClose }) => {
     }
 
     try {
-      const formData = { id: classDetails.id, name: className, class_fees: parseFloat(classFees) }; // Include class_fees
+      const formData = { id: classDetails.id, name: className, class_fees: parseFloat(classFees) };
       const response = await window.electron.ipcRenderer.invoke('update-class', formData);
       
       if (response.success) {
         console.log("Class updated successfully:", response.updatedId);
-        onClose(); // Close the modal on success
+        onClose();
       } else {
         setError(`Error: ${response.error}`);
       }
@@ -43,48 +43,63 @@ const EditClass = ({ classDetails, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md transform transition-all duration-300 ease-out scale-95 sm:scale-100">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ease-in-out">
+      <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-300 ease-in-out scale-95 sm:scale-100">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Edit Class</h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-800" aria-label="Close">
+          <h2 className="text-3xl font-bold text-gray-800">Edit Class</h2>
+          <button 
+            onClick={onClose} 
+            className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+            aria-label="Close"
+          >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded" role="alert">
+            <p>{error}</p>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="className">Class Name</label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="className">
+              Class Name
+            </label>
             <input
               type="text"
               id="className"
               value={className}
               onChange={(e) => setClassName(e.target.value)}
-              className="w-full px-3 py-2 border rounded shadow focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter class name"
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-600 mb-1" htmlFor="classFees">Class Fees</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="classFees">
+              Class Fees
+            </label>
             <input
               type="number"
               id="classFees"
               value={classFees}
               onChange={(e) => setClassFees(e.target.value)}
-              className="w-full px-3 py-2 border rounded shadow focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="Enter class fees"
               step="0.01"
               required
             />
           </div>
 
-          <div className="mt-6 flex justify-end">
-            <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">
+          <div className="flex justify-end">
+            <button 
+              type="submit" 
+              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+            >
               Save Changes
             </button>
           </div>
@@ -98,7 +113,7 @@ EditClass.propTypes = {
   classDetails: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    class_fees: PropTypes.number.isRequired, // Ensure class_fees is included
+    class_fees: PropTypes.number.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

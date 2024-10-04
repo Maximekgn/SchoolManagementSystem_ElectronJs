@@ -3,37 +3,38 @@ import AddPayment from './AddPayment';
 import ViewPayments from './ViewPayments';
 import { FiDollarSign, FiEye, FiSearch } from 'react-icons/fi';
 
-const StudentTable = React.memo(({ students, onMakePayment, onViewPayments }) => (
+const StudentTable = React.memo(({ students, onMakePayment, onViewPayments, getTotalDiscount }) => (
   <div className="overflow-x-auto bg-white shadow-lg rounded-lg">
     <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-blue-600">
+      <thead className="bg-gradient-to-r from-blue-500 to-blue-600">
         <tr>
-          {['Name', 'Surname', 'Class', 'Fees', 'Discount', 'Paid', 'Actions'].map((header) => (
-            <th key={header} className="px-2 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+          {['Name', 'Surname', 'Class', 'School Fees', 'Discount', 'Paid', 'Remaining', 'Actions'].map((header) => (
+            <th key={header} className="px-3 py-4 text-left text-xs font-medium text-white uppercase tracking-wider">
               {header}
             </th>
           ))}
         </tr>
       </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
+      <tbody className="bg-white divide-y divide-gray-100">
         {students.map((student) => (
-          <tr key={student.id} className="hover:bg-blue-50 transition-colors duration-150">
-            <td className="px-2 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
-            <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
-            <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{student.className}</td>
-            <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{student.schoolFee} FCFA</td>
-            <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{student.discountFee} FCFA</td>
-            <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-500">{student.paidFee} FCFA</td>
-            <td className="px-2 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <tr key={student.id} className="hover:bg-blue-50 transition-colors duration-200">
+            <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
+            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-600">{student.surname}</td>
+            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-600">{student.className}</td>
+            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-600">{student.schoolFee} FCFA</td>
+            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-600">{student.totalDiscount} FCFA</td>
+            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-600">{student.paidFee} FCFA</td>
+            <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-600">{student.schoolFee - student.paidFee} FCFA</td>
+            <td className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button
                 onClick={() => onMakePayment(student.id)}
-                className="text-blue-600 hover:text-blue-900 mr-2"
+                className="text-blue-600 hover:text-blue-800 mr-3 transition-colors duration-200"
               >
                 <FiDollarSign className="inline-block mr-1" /> <span className="hidden sm:inline">Pay</span>
               </button>
               <button
                 onClick={() => onViewPayments(student.id)}
-                className="text-green-600 hover:text-green-900"
+                className="text-green-600 hover:text-green-800 transition-colors duration-200"
               >
                 <FiEye className="inline-block mr-1" /> <span className="hidden sm:inline">View</span>
               </button>
@@ -46,21 +47,21 @@ const StudentTable = React.memo(({ students, onMakePayment, onViewPayments }) =>
 ));
 
 const Pagination = React.memo(({ currentPage, totalPages, onPageChange }) => (
-  <div className="mt-4 flex flex-wrap items-center justify-center">
+  <div className="mt-6 flex flex-wrap items-center justify-center">
     <button 
       onClick={() => onPageChange(currentPage - 1)} 
       disabled={currentPage === 1}
-      className="px-3 py-1 m-1 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="px-4 py-2 m-1 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
       Previous
     </button>
-    <span className="mx-2 text-sm text-gray-700">
+    <span className="mx-3 text-sm text-gray-700">
       Page {currentPage} of {totalPages}
     </span>
     <button 
       onClick={() => onPageChange(currentPage + 1)} 
       disabled={currentPage === totalPages}
-      className="px-3 py-1 m-1 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="px-4 py-2 m-1 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
       Next
     </button>
@@ -82,13 +83,30 @@ const Payment = () => {
     try {
       setLoading(true);
       const response = await window.electron.ipcRenderer.invoke('get-students');
-      setStudents(response);
+      const studentsWithDiscount = await Promise.all(response.map(async (student) => {
+        const totalDiscount = await getTotalDiscount(student);
+        return { ...student, totalDiscount };
+      }));
+      setStudents(studentsWithDiscount);
       setError(null);
     } catch (err) {
       setError('Failed to fetch students. Please try again.');
       console.error('Error fetching students:', err);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const getTotalDiscount = useCallback(async (student) => {
+    try {
+      const response = await window.electron.ipcRenderer.invoke('get-payments', student.id);
+      if (response.success) {
+        return response.payments.reduce((sum, payment) => sum + (payment.discount || 0), 0);
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error fetching total discount:', error);
+      return 0;
     }
   }, []);
 
@@ -137,7 +155,7 @@ const Payment = () => {
         <p>{error}</p>
         <button 
           onClick={fetchStudents} 
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200"
         >
           Retry
         </button>
@@ -146,26 +164,28 @@ const Payment = () => {
   }
 
   return (
-    <div className="p-2 sm:p-4 md:p-6 bg-gray-100 min-h-screen">
-      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-blue-800">Payment Management</h1>
-      <div className="max-w-full mx-auto">
-        <div className="mb-4 flex flex-col sm:flex-row items-center">
-          <div className="relative w-full sm:w-64 mb-2 sm:mb-0">
+    <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-blue-800">Payment Management</h1>
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-6 flex flex-col sm:flex-row items-center justify-between">
+          <div className="relative w-full sm:w-64 mb-4 sm:mb-0">
             <input
               type="text"
               placeholder="Search for a student..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
         </div>
-        <StudentTable
-          students={paginatedStudents}
-          onMakePayment={handleMakePayment}
-          onViewPayments={handleViewPayments}
-        />
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <StudentTable
+            students={paginatedStudents}
+            onMakePayment={handleMakePayment}
+            onViewPayments={handleViewPayments}
+          />
+        </div>
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

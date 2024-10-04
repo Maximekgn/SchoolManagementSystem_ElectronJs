@@ -5,28 +5,28 @@ import EditClass from './EditClass';
 import { FiEye, FiEdit, FiTrash2, FiSearch, FiPlus } from 'react-icons/fi';
 
 const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
-  <div className="bg-white shadow-md rounded-lg overflow-hidden">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
+  <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+    <table className="w-full">
+      <thead className="bg-gray-100">
         <tr>
           {['Class Name', 'Fees', 'Actions'].map((header) => (
-            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{header}</th>
+            <th key={header} className="px-6 py-4 text-left text-sm font-semibold text-gray-600">{header}</th>
           ))}
         </tr>
       </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
+      <tbody>
         {classes.map((classItem) => (
-          <tr key={classItem.id} className="hover:bg-gray-50">
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{classItem.name}</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{classItem.class_fees.toFixed(2)} FCFA</td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <button onClick={() => onViewClass(classItem)} className="text-blue-600 hover:text-blue-900 mr-3">
+          <tr key={classItem.id} className="hover:bg-gray-50 transition-colors duration-200">
+            <td className="px-6 py-4 text-sm font-medium text-gray-900">{classItem.name}</td>
+            <td className="px-6 py-4 text-sm text-gray-600">{classItem.class_fees.toFixed(2)} FCFA</td>
+            <td className="px-6 py-4 text-sm space-x-2">
+              <button onClick={() => onViewClass(classItem)} className="text-blue-500 hover:text-blue-700 transition-colors duration-200">
                 <FiEye className="inline-block mr-1" /> View
               </button>
-              <button onClick={() => onEditClass(classItem)} className="text-green-600 hover:text-green-900 mr-3">
+              <button onClick={() => onEditClass(classItem)} className="text-green-500 hover:text-green-700 transition-colors duration-200">
                 <FiEdit className="inline-block mr-1" /> Edit
               </button>
-              <button onClick={() => onDeleteClass(classItem.id)} className="text-red-600 hover:text-red-900">
+              <button onClick={() => onDeleteClass(classItem.id)} className="text-red-500 hover:text-red-700 transition-colors duration-200">
                 <FiTrash2 className="inline-block mr-1" /> Delete
               </button>
             </td>
@@ -38,21 +38,21 @@ const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
 );
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
-  <div className="mt-4 flex items-center justify-center">
+  <div className="mt-6 flex items-center justify-center space-x-4">
     <button 
       onClick={() => onPageChange(currentPage - 1)} 
       disabled={currentPage === 1}
-      className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
       Previous
     </button>
-    <span className="mx-4 text-sm text-gray-700">
+    <span className="text-sm text-gray-700">
       Page {currentPage} of {totalPages}
     </span>
     <button 
       onClick={() => onPageChange(currentPage + 1)} 
       disabled={currentPage === totalPages}
-      className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
       Next
     </button>
@@ -111,22 +111,22 @@ const Classes = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Class Management</h1>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <h1 className="text-4xl font-bold mb-8 text-gray-800">Class Management</h1>
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-8 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
         <button 
           onClick={() => setIsAdding(true)} 
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center"
+          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
         >
           <FiPlus className="mr-2" /> Add Class
         </button>
-        <div className="relative">
+        <div className="relative w-full sm:w-64">
           <input
             type="text"
             placeholder="Search for a class..."
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
           />
           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>

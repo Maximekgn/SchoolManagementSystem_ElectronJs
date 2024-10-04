@@ -12,21 +12,21 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
   ];
 
   return (
-    <div className={`w-64 bg-blue-700 text-white h-screen `}>
-      <div className="p-6">
-        <h1 className="text-3xl font-bold tracking-wide text-center">SchoolMS</h1>
+    <div className={`${isOpen ? 'w-64' : 'w-20'} bg-gray-100 text-gray-800 h-screen transition-all duration-300 ease-in-out`}>
+      <div className="p-20">
+        
       </div>
-      <nav className="mt-10">
+      <nav className="mt-8">
         {menuItems.map((item) => (
           <button 
             key={item.name}
-            className={`w-full text-left py-3 px-5 rounded-lg transition duration-300 ${
-              currentPage === item.name ? 'bg-blue-900' : ''
+            className={`w-full text-left py-3 px-4 rounded-lg transition duration-200 ${
+              currentPage === item.name ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'
             } flex items-center space-x-3`}
             onClick={() => setCurrentPage(item.name)}
           >
-            <item.icon className="w-6 h-6" />
-            <span className="text-2xl font-medium">{item.label}</span>
+            <item.icon className={`w-6 h-6 ${isOpen ? 'mr-3' : 'mx-auto'}`} />
+            <span className={`text-sm font-medium ${isOpen ? 'block' : 'hidden'}`}>{item.label}</span>
           </button>
         ))}
       </nav>

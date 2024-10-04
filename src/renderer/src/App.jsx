@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Header from './components/Header';
 import SideBar from './components/SideBar';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/students/Students';
@@ -42,14 +41,6 @@ const App = () => {
         isOpen={isSidebarOpen}
       />
       <div className="flex flex-col flex-grow">
-        <Header title="School Management System">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-md lg:hidden hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
-          >
-            <FiMenu className="h-6 w-6" />
-          </button>
-        </Header>
         <main className="flex-grow overflow-x-hidden overflow-y-auto bg-gray-100">
           <div className="container mx-auto px-6 py-8">
             {renderPage()}
