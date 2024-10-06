@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FiUser, FiCalendar, FiMapPin, FiUsers, FiBookOpen, FiHeart, FiDollarSign, FiPhone } from 'react-icons/fi';
+import { FiUser, FiCalendar, FiMapPin, FiUsers, FiBookOpen, FiHeart, FiDollarSign, FiPhone, FiImage } from 'react-icons/fi';
+import defaultAvatar from '/default.jpg';
 
 const EditStudent = ({ student, onClose, onUpdate }) => {
   const [editedStudent, setEditedStudent] = useState({ ...student });
   const [classes, setClasses] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewImage, setPreviewImage] = useState(student.picture ? `data:image/jpeg;base64,${student.picture}` : defaultAvatar);
 
   useEffect(() => {
     fetchClasses();
@@ -26,6 +28,18 @@ const EditStudent = ({ student, onClose, onUpdate }) => {
       [name]: type === 'number' ? parseFloat(value) : value,
     }));
   }, []);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+        setEditedStudent(prev => ({ ...prev, picture: reader.result.split(',')[1] }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSave = useCallback(async (e) => {
     e.preventDefault();
@@ -85,6 +99,28 @@ const EditStudent = ({ student, onClose, onUpdate }) => {
         <form onSubmit={handleSave} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
+              <h3 className="text-xl font-semibold mb-4 text-gray-700">Student picture</h3>
+              <div className="mb-4">
+                <img
+                  src={previewImage}
+                  alt="Student"
+                  className="w-48 h-48 object-cover rounded-full mx-auto mb-4"
+                />
+                <label className="block">
+                  <span className="sr-only">Choose student picture</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded-full file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-blue-50 file:text-blue-700
+                      hover:file:bg-blue-100"
+                  />
+                </label>
+              </div>
               <h3 className="text-xl font-semibold mb-4 text-gray-700">Student Information</h3>
               {renderField('name', 'First Name', 'text', null, <FiUser />)}
               {renderField('surname', 'Last Name', 'text', null, <FiUser />)}

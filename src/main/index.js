@@ -136,6 +136,12 @@ ipcMain.handle("get-students", (event, args) => {
         console.error("Error fetching students:", err.message);
         reject(err); 
       } else {
+        // Convert picture blob to base64 string
+        rows.forEach(row => {
+          if (row.picture) {
+            row.picture = row.picture.toString('base64');
+          }
+        });
         resolve(rows); 
       }
     });
@@ -150,15 +156,16 @@ ipcMain.handle("add-student", async (event, formData) => {
     const query = `INSERT INTO students (
       name, surname, birthDate, birthPlace, gender, admissionDate, classId, 
        schoolFee, paidFee, bloodGroup, medicalCondition, 
-      previousSchool, religion, additionalNote, parentName, parentSurname, parentPhone
-    ) VALUES (${',?'.repeat(18).slice(1)})`;
+      previousSchool, religion, additionalNote, parentName, parentSurname, parentPhone, picture
+    ) VALUES (${',?'.repeat(19).slice(1)})`;
 
     const values = [
       formData.name, formData.surname, formData.birthDate, formData.birthPlace,
       formData.gender, formData.admissionDate, formData.classId, formData.schoolFee,
       formData.paidFee, formData.bloodGroup, formData.medicalCondition,
       formData.previousSchool, formData.religion, formData.additionalNote,
-      formData.parentName, formData.parentSurname, formData.parentPhone
+      formData.parentName, formData.parentSurname, formData.parentPhone,
+      formData.picture ? Buffer.from(formData.picture, 'base64') : null
     ];
 
     database.run(query, values, function(err) {
@@ -182,23 +189,23 @@ ipcMain.handle("update-student", async (event, formData) => {
         regNumber = ?, admissionDate = ?, classId = ?,
         schoolFee = ?, paidFee = ?, bloodGroup = ?, medicalCondition = ?,
         previousSchool = ?, religion = ?, additionalNote = ?,
-        parentName = ?, parentSurname = ?, parentPhone = ?
+        parentName = ?, parentSurname = ?, parentPhone = ?, picture = ?
       WHERE id = ?
     `;
 
     const {
       surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, 
-      classId,  schoolFee, paidFee, bloodGroup, medicalCondition, 
+      classId, schoolFee, paidFee, bloodGroup, medicalCondition, 
       previousSchool, religion, additionalNote, parentName, parentSurname, 
-      parentPhone, id
+      parentPhone, picture, id
     } = formData;
 
     return new Promise((resolve, reject) => {
       database.run(query, [
         surname, name, birthDate, birthPlace, gender, regNumber, admissionDate, 
-        classId,  schoolFee, paidFee, bloodGroup, medicalCondition, 
+        classId, schoolFee, paidFee, bloodGroup, medicalCondition, 
         previousSchool, religion, additionalNote, parentName, parentSurname, 
-        parentPhone, id
+        parentPhone, picture ? Buffer.from(picture, 'base64') : null, id
       ], function(err) {
         if (err) {
           console.error("Error updating student:", err.message);
@@ -599,5 +606,67 @@ ipcMain.handle("edit-payment", async (event, editedPayment) => {
       }
     });
     }
+  });
+});
+
+// get a student notes 
+ipcMain.handle("get-student-notes", async (event, student_id) => {
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT * FROM student_notes WHERE student_id = ?';
+    database.all(query, [student_id], (err, rows) => {
+      if (err) {
+        console.error('Error fetching student notes:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, notes: rows });
+      }
+    });
+  });
+});
+
+// add a student note
+ipcMain.handle("add-student-note", async (event, newNote) => {
+  return new Promise((resolve, reject) => {
+    const query = 'INSERT INTO student_notes (student_id, title, value, noteDate) VALUES (?, ?, ?, ?)';
+    const { student_id, title, value, noteDate } = newNote;
+    database.run(query, [student_id, title, value, noteDate], function(err) {
+      if (err) {
+        console.error('Error adding student note:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, insertedId: this.lastID });
+      }
+    });
+  });
+});
+
+// edit a student note
+ipcMain.handle("edit-student-note", async (event, editedNote) => {
+  return new Promise((resolve, reject) => {
+    const query = 'UPDATE student_notes SET title = ?, value = ?, noteDate = ? WHERE id = ?';
+    const { id, title, value, noteDate } = editedNote;
+    database.run(query, [title, value, noteDate, id], function(err) {
+      if (err) {
+        console.error('Error editing student note:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, updatedId: this.lastID });
+      }
+    });
+  });
+});
+
+// delete a student note
+ipcMain.handle("delete-student-note", async (event, noteId) => {
+  return new Promise((resolve, reject) => {
+    const query = 'DELETE FROM student_notes WHERE id = ?';
+    database.run(query, [noteId], function(err) {
+      if (err) {
+        console.error('Error deleting student note:', err.message);
+        reject({ success: false, error: err.message });
+      } else {
+        resolve({ success: true, deletedId: this.lastID });
+      }
+    });
   });
 });

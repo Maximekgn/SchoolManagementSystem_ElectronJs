@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
+import defaultAvatar from '/default.jpg'; // Make sure to add this image to your assets
 
 const ViewStudent = ({ student, onClose }) => {
   const formatDate = useCallback((dateString) => {
@@ -45,34 +46,45 @@ const ViewStudent = ({ student, onClose }) => {
           </button>
         </div>
 
-        <InfoSection title="Personal Information">
-          <InfoItem label="First Name" value={student.name} />
-          <InfoItem label="Last Name" value={student.surname} />
-          <InfoItem label="Date of Birth" value={formatDate(student.birthDate)} />
-          <InfoItem label="Place of Birth" value={student.birthPlace} />
-          <InfoItem label="Gender" value={student.gender} />
-          <InfoItem label="Religion" value={student.religion} />
-        </InfoSection>
+        <div className="flex flex-col md:flex-row">
+          <div className="md:w-1/3 mb-6 md:mb-0">
+            <img
+              src={student.picture ? `data:image/jpeg;base64,${student.picture}` : defaultAvatar}
+              alt={`${student.name} ${student.surname}`}
+              className="w-full h-auto rounded-lg shadow-md"
+            />
+          </div>
+          <div className="md:w-2/3 md:pl-8">
+            <InfoSection title="Personal Information">
+              <InfoItem label="First Name" value={student.name} />
+              <InfoItem label="Last Name" value={student.surname} />
+              <InfoItem label="Date of Birth" value={formatDate(student.birthDate)} />
+              <InfoItem label="Place of Birth" value={student.birthPlace} />
+              <InfoItem label="Gender" value={student.gender} />
+              <InfoItem label="Religion" value={student.religion} />
+            </InfoSection>
 
-        <InfoSection title="Academic Information">
-          <InfoItem label="Registration Number" value={student.regNumber} />
-          <InfoItem label="Date of Admission" value={formatDate(student.admissionDate)} />
-          <InfoItem label="Class" value={student.className} />
-          <InfoItem label="Previous School" value={student.previousSchool} />
-          <InfoItem label="School Fees" value={`${student.schoolFee || 0} FCFA`} />
-          <InfoItem label="Paid Fees" value={`${student.paidFee || 0} FCFA`} />
-        </InfoSection>
+            <InfoSection title="Academic Information">
+              <InfoItem label="Registration Number" value={student.regNumber} />
+              <InfoItem label="Date of Admission" value={formatDate(student.admissionDate)} />
+              <InfoItem label="Class" value={student.className} />
+              <InfoItem label="Previous School" value={student.previousSchool} />
+              <InfoItem label="School Fees" value={`${student.schoolFee || 0} FCFA`} />
+              <InfoItem label="Paid Fees" value={`${student.paidFee || 0} FCFA`} />
+            </InfoSection>
 
-        <InfoSection title="Health Information">
-          <InfoItem label="Blood Group" value={student.bloodGroup} />
-          <InfoItem label="Medical Condition" value={student.medicalCondition || 'None'} />
-        </InfoSection>
+            <InfoSection title="Health Information">
+              <InfoItem label="Blood Group" value={student.bloodGroup} />
+              <InfoItem label="Medical Condition" value={student.medicalCondition || 'None'} />
+            </InfoSection>
 
-        <InfoSection title="Parent Information">
-          <InfoItem label="Parent's First Name" value={student.parentName} />
-          <InfoItem label="Parent's Last Name" value={student.parentSurname} />
-          <InfoItem label="Parent's Mobile Number" value={student.parentPhone} />
-        </InfoSection>
+            <InfoSection title="Parent Information">
+              <InfoItem label="Parent's First Name" value={student.parentName} />
+              <InfoItem label="Parent's Last Name" value={student.parentSurname} />
+              <InfoItem label="Parent's Mobile Number" value={student.parentPhone} />
+            </InfoSection>
+          </div>
+        </div>
 
         <div className="mt-8 flex justify-end">
           <button 

@@ -274,7 +274,7 @@ CREATE TABLE IF NOT EXISTS student_payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   student_id INTEGER NOT NULL,
-  payment_date DATE NOT NULL,
+  paymentDate DATE NOT NULL,
   amount REAL NOT NULL,
   amount_paid REAL NOT NULL,
   discount REAL DEFAULT 0,
@@ -286,7 +286,8 @@ CREATE TABLE IF NOT EXISTS student_payments (
 CREATE TABLE IF NOT EXISTS student_notes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   student_id INTEGER NOT NULL,
-  note TEXT NOT NULL,
-  note_date DATE NOT NULL,
+  title TEXT NOT NULL,
+  value REAL NOT NULL,
+  noteDate DATE NOT NULL,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
-);
+);  
