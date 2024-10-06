@@ -12,3 +12,11 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   window.api = api
 }
+
+// preload.js
+const { ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  printPDF: () => ipcRenderer.send('print-to-pdf'),
+  generatePDF: () => ipcRenderer.send('generate-pdf')
+});

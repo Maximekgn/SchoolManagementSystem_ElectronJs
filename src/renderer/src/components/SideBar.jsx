@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiHome, FiUsers, FiBriefcase, FiDollarSign, FiSettings } from 'react-icons/fi';
+import { FiHome, FiUsers, FiBriefcase, FiDollarSign, FiSettings, FiFileText } from 'react-icons/fi';
 
 const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
   const menuItems = [
@@ -9,6 +9,7 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
     { name: 'payments', icon: FiDollarSign, label: 'Payments' },
     { name: 'classes', icon: FiBriefcase, label: 'Classes' },
     { name: 'settings', icon: FiSettings, label: 'Settings' },
+    { name: 'reports', icon: FiFileText, label: 'Reports' },
   ];
 
   return (

@@ -8,6 +8,7 @@ const ipcMain = electron.ipcMain;
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
+
 let mainWindow;
 function createWindow() {
   // Create the browser window.
@@ -669,4 +670,58 @@ ipcMain.handle("delete-student-note", async (event, noteId) => {
       }
     });
   });
+});
+
+ipcMain.handle('print-to-pdf', async (event) => {
+  const win = BrowserWindow.getFocusedWindow();
+  if (!win) {
+    throw new Error('Aucune fenêtre active trouvée');
+  }
+
+  try {
+    // Obtenir la liste des imprimantes
+    const printers = await win.webContents.getPrintersAsync();
+    
+    if (printers.length === 0) {
+      dialog.showErrorBox('Erreur d\'impression', 
+        'Aucune imprimante n\'a été trouvée. Veuillez vérifier que:\n' +
+        '1. Une imprimante est installée\n' +
+        '2. Le service d\'impression Windows est actif\n' +
+        '3. Vous avez les droits d\'accès nécessaires'
+      );
+      return { success: false, error: 'NO_PRINTERS' };
+    }
+
+    // Configuration de l'impression
+    const printOptions = {
+      silent: false,
+      printBackground: true,
+      deviceName: printers[0].name, // Utilise la première imprimante par défaut
+      color: true,
+      margins: {
+        marginType: 'printableArea'
+      },
+      landscape: false
+    };
+
+    return new Promise((resolve) => {
+      win.webContents.print(printOptions, (success, error) => {
+        if (success) {
+          resolve({ success: true });
+        } else {
+          dialog.showErrorBox('Erreur d\'impression', 
+            `L'impression a échoué. Erreur: ${error}\n` +
+            'Veuillez vérifier votre connexion à l\'imprimante.'
+          );
+          resolve({ success: false, error });
+        }
+      });
+    });
+  } catch (error) {
+    dialog.showErrorBox('Erreur système', 
+      `Une erreur est survenue: ${error.message}\n` +
+      'Essayez de redémarrer l\'application.'
+    );
+    return { success: false, error: error.message };
+  }
 });
