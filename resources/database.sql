@@ -281,3 +281,12 @@ CREATE TABLE IF NOT EXISTS student_payments (
   description TEXT,
   FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
+
+-- Table des notes des étudiants (Student_Notes)
+CREATE TABLE IF NOT EXISTS student_notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id INTEGER NOT NULL,
+  note TEXT NOT NULL,
+  note_date DATE NOT NULL,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);

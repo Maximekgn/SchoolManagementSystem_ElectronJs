@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import AddStudentForm from './AddStudentForm';
 import ViewStudent from './ViewStudent';
 import StudentEdit from './EditStudent';
-import { FiEye, FiEdit, FiTrash2, FiSearch, FiUserPlus } from 'react-icons/fi';
+import { FiEye, FiEdit, FiTrash2, FiSearch, FiUserPlus, FiFilter } from 'react-icons/fi';
 
 const StudentTable = ({ students, onViewStudent, onEditStudent, onDeleteStudent }) => (
   <div className="bg-white shadow-lg rounded-lg overflow-x-auto">
@@ -70,11 +70,15 @@ const Students = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [studentsPerPage, setStudentsPerPage] = useState(10);
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState('');
 
   const fetchStudents = useCallback(async () => {
     try {
       const response = await window.electron.ipcRenderer.invoke('get-students');
       setStudents(response);
+      const uniqueClasses = [...new Set(response.map(student => student.className))];
+      setClasses(uniqueClasses);
     } catch (error) {
       console.error('Error fetching students:', error);
     }
@@ -118,7 +122,8 @@ const Students = () => {
   };
 
   const filteredStudents = students.filter((student) =>
-    `${student.name} ${student.surname}`.toLowerCase().includes(searchTerm.toLowerCase())
+    `${student.name} ${student.surname}`.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (selectedClass === '' || student.className === selectedClass)
   );
 
   const totalPages = Math.ceil(filteredStudents.length / studentsPerPage);
@@ -138,14 +143,29 @@ const Students = () => {
         >
           <FiUserPlus className="mr-2" /> Add Student
         </button>
-        <div className="relative w-full sm:w-64 mt-4 sm:mt-0">
-          <input
-            type="text"
-            placeholder="Search for a student..."
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          />
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        <div className="flex flex-col sm:flex-row w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 mb-4 sm:mb-0 sm:mr-4">
+            <input
+              type="text"
+              placeholder="Search for a student..."
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div>
+          <div className="relative w-full sm:w-64">
+            <select
+              value={selectedClass}
+              onChange={(e) => setSelectedClass(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 appearance-none"
+            >
+              <option value="">All Classes</option>
+              {classes.map((className) => (
+                <option key={className} value={className}>{className}</option>
+              ))}
+            </select>
+            <FiFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          </div>
         </div>
       </div>
 
