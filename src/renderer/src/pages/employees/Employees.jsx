@@ -117,7 +117,7 @@ const Employees = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 show-up">
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Employee Management</h1>
 
       <div className="mb-6 flex items-center justify-between">

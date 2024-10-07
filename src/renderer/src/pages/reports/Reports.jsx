@@ -5,7 +5,7 @@ import EditMark from './EditMark';
 import { FiEye, FiEdit, FiPlus, FiSearch, FiFilter } from 'react-icons/fi';
 
 const ReportTable = ({ students, onViewReport, onEditReport, onAddMark }) => (
-  <div className="bg-white shadow-lg rounded-lg overflow-x-auto">
+  <div className="bg-white shadow-lg rounded-lg overflow-x-auto show-up">
     <table className="w-full">
       <thead className="bg-gray-100">
         <tr>

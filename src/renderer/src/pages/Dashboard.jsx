@@ -35,7 +35,7 @@ const Dashboard = () => {
   }, [fetchData]);
 
   const StatCard = ({ title, value, icon }) => (
-    <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex items-center space-x-4">
+    <div className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 flex items-center space-x-4 show-up">
       <div className="p-3 rounded-full bg-blue-100 text-blue-600">
         {icon}
       </div>

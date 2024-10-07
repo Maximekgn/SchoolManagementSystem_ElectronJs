@@ -114,7 +114,7 @@ const Classes = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8 max-w-6xl show-up">
       <h1 className="text-4xl font-bold mb-8 text-gray-800">Class Management</h1>
 
       <div className="mb-8 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
