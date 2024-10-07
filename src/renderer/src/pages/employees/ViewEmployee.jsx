@@ -38,18 +38,18 @@ const ViewEmployee = ({ employee, onClose }) => {
   );
 
   return (
-    <div 
-      className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out overflow-y-auto"
-      role="dialog" 
-      aria-labelledby="employee-details-title" 
+    <div
+      className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 transition-opacity duration-300 ease-out overflow-y-auto show-up"
+      role="dialog"
+      aria-labelledby="employee-details-title"
       aria-modal="true"
     >
       <div className="bg-white rounded-lg shadow-2xl p-4 sm:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-95 sm:scale-100">
         <div className="flex justify-between items-center mb-4 sm:mb-6">
           <h2 id="employee-details-title" className="text-xl sm:text-2xl font-bold text-blue-800">Employee Details</h2>
-          <button 
-            onClick={onClose} 
-            className="text-gray-500 hover:text-blue-700 transition-colors duration-200" 
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-blue-700 transition-colors duration-200"
             aria-label="Close employee details"
           >
             <FiX className="h-5 w-5 sm:h-6 sm:w-6" />

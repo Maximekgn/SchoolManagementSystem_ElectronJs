@@ -13,8 +13,8 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
   ];
 
   return (
-    <div className={`${isOpen ? 'w-64' : 'w-20'} ml-4 bg-gray-100 text-gray-800 h-screen transition-all duration-300 ease-in-out`}>
-      <div className="p-20">
+    <div className={`${isOpen ? 'w-64' : 'w-20'} px-[10px] bg-gray-100 text-gray-800 h-screen transition-all duration-300 ease-in-out bg-gradient-to-b from-gray-100 to-gray-200`}>
+      <div className="p-3">
 
       </div>
       <nav className="mt-8">

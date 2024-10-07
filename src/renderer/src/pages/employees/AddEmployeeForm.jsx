@@ -76,7 +76,7 @@ const AddEmployeeForm = ({ onClose }) => {
   );
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50 show-up">
       <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-4xl max-h-screen overflow-y-auto">
         <h2 className="text-3xl font-bold mb-6 text-center text-indigo-600">Add New Employee</h2>
         <form onSubmit={handleSubmit} className="space-y-6">

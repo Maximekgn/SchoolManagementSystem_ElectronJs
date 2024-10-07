@@ -12,7 +12,7 @@ const EditEmployee = ({ employee, onClose }) => {
   };
 
   const handleSave = () => {
-    
+
     // Appel IPC pour sauvegarder les modifications
     window.electron.ipcRenderer.invoke('update-employee', editedEmployee);
     console.log('Employee updated:', editedEmployee);
@@ -20,7 +20,7 @@ const EditEmployee = ({ employee, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center p-4">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex justify-center items-center p-4 show-up">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-screen overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Edit Employee</h2>

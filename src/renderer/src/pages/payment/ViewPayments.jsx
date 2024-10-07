@@ -53,7 +53,7 @@ const ViewPayments = ({ studentId, onClose }) => {
       const result = await window.electron.ipcRenderer.invoke('edit-payment', editedPayment);
       if (result.success) {
         setEditingPayment(null);
-        setPayments(prevPayments => prevPayments.map(payment => 
+        setPayments(prevPayments => prevPayments.map(payment =>
           payment.id === editedPayment.id ? editedPayment : payment
         ));
       } else {
@@ -77,7 +77,7 @@ const ViewPayments = ({ studentId, onClose }) => {
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center show-up">
         <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
           <p className="text-red-600 text-center font-medium">{error}</p>
           <button onClick={onClose} className="mt-6 w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-300 ease-in-out font-medium">
@@ -110,7 +110,7 @@ const ViewPayments = ({ studentId, onClose }) => {
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mr-3">
                       {categoryPayments.reduce((sum, payment) => sum + payment.amount_paid, 0)} FCFA
                     </span>
-                    <button 
+                    <button
                       onClick={() => toggleCategory(category)}
                       className="text-indigo-600 hover:text-indigo-800 focus:outline-none"
                     >
@@ -157,20 +157,20 @@ const ViewPayments = ({ studentId, onClose }) => {
                                 <span className="text-gray-700 font-medium">Date:</span>
                               </div>
                               <span className="text-gray-800">{new Date(payment.payment_date).toLocaleDateString()}</span>
-                              
+
                               <div className="flex items-center">
                                 <FiDollarSign className="mr-2 text-indigo-500" />
                                 <span className="text-gray-700 font-medium">Amount:</span>
                               </div>
                               <span className="text-gray-800">{payment.amount} FCFA</span>
-                              
+
                               <div className="flex items-center">
                                 <FiPercent className="mr-2 text-orange-500" />
                                 <span className="text-gray-700 font-medium">Discount:</span>
                               </div>
                               <span className="text-orange-500 font-medium">{payment.discount || 0} FCFA</span>
                             </div>
-                            <button 
+                            <button
                               onClick={() => handleEditPayment(payment)}
                               className="mt-4 text-indigo-600 hover:text-indigo-800 flex items-center transition duration-300"
                             >
