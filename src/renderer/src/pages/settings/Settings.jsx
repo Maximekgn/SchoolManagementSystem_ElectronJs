@@ -23,9 +23,9 @@ const Settings = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg">
+    <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg show-up">
       <h1 className="text-4xl font-bold mb-8 text-gray-800 border-b pb-4">Settings</h1>
-      
+
       {resetMessage && (
         <div className="mb-4 p-4 bg-blue-100 text-blue-700 rounded-lg">
           {resetMessage}
@@ -38,7 +38,7 @@ const Settings = () => {
             <h2 className="text-xl font-semibold text-red-700 mb-2">Reset Data</h2>
             <p className="text-red-600">Warning: This action will delete all data and cannot be undone.</p>
           </div>
-          <button 
+          <button
             className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out flex items-center"
             onClick={handleResetData}
           >
@@ -64,13 +64,13 @@ const Settings = () => {
             <h2 className="text-2xl font-bold mb-4 text-center">Confirm Data Reset</h2>
             <p className="mb-6 text-center">Are you sure you want to reset all data? This action cannot be undone.</p>
             <div className="flex justify-center space-x-4">
-              <button 
+              <button
                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                 onClick={confirmResetData}
               >
                 Yes, Reset Data
               </button>
-              <button 
+              <button
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
                 onClick={() => setShowConfirmation(false)}
               >

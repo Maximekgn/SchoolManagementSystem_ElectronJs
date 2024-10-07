@@ -93,7 +93,7 @@ const EditStudent = ({ student, onClose, onUpdate }) => {
   );
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 overflow-y-auto show-up">
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Edit Student</h2>
         <form onSubmit={handleSave} className="space-y-6">

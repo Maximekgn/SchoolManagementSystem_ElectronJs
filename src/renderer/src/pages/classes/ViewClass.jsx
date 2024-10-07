@@ -14,10 +14,10 @@ const ViewClass = ({ classDetails, onClose }) => {
 
   if (!classDetails) {
     return (
-      <div 
+      <div
         className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ease-in-out"
-        role="dialog" 
-        aria-labelledby="class-details-title" 
+        role="dialog"
+        aria-labelledby="class-details-title"
         aria-modal="true"
       >
         <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-300 ease-out scale-95 sm:scale-100">
@@ -39,18 +39,18 @@ const ViewClass = ({ classDetails, onClose }) => {
   const { name, capacity, class_fees } = classDetails;
 
   return (
-    <div 
-      className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ease-in-out"
-      role="dialog" 
-      aria-labelledby="class-details-title" 
+    <div
+      className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ease-in-out show-up"
+      role="dialog"
+      aria-labelledby="class-details-title"
       aria-modal="true"
     >
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-300 ease-out scale-95 sm:scale-100">
         <div className="flex justify-between items-center mb-8">
           <h2 id="class-details-title" className="text-3xl font-bold text-gray-800">Class Details</h2>
-          <button 
-            onClick={onClose} 
-            className="text-gray-500 hover:text-gray-700 transition-colors duration-300" 
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition-colors duration-300"
             aria-label="Close class details"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">

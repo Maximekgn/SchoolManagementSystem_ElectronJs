@@ -5,7 +5,7 @@ import EditMark from './EditMark';
 import { FiEye, FiEdit, FiPlus, FiSearch, FiFilter } from 'react-icons/fi';
 
 const ReportTable = ({ students, onViewReport, onEditReport, onAddMark }) => (
-  <div className="bg-white shadow-lg rounded-lg overflow-x-auto">
+  <div className="bg-white shadow-lg rounded-lg overflow-x-auto show-up">
     <table className="w-full">
       <thead className="bg-gray-100">
         <tr>
@@ -17,11 +17,11 @@ const ReportTable = ({ students, onViewReport, onEditReport, onAddMark }) => (
       <tbody className="divide-y divide-gray-200">
         {students.map((student) => (
           <tr key={student.id} className="hover:bg-gray-50 transition-colors duration-200">
-            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
-            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
-            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{student.className}</td>
-            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{student.parentPhone || 'N/A'}</td>
-            <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
+            <td className="px-4 py-3.5 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
+            <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{student.surname}</td>
+            <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{student.className}</td>
+            <td className="px-4 py-3.5 whitespace-nowrap text-sm text-gray-500">{student.parentPhone || 'N/A'}</td>
+            <td className="px-4 py-3.5 whitespace-nowrap text-sm font-medium">
               <button onClick={() => onAddMark(student)} className="text-green-600 hover:text-green-800 transition-colors duration-200 mr-2">
                 <FiPlus className="inline-block mr-1" /> <span className="hidden sm:inline">Add</span>
               </button>
@@ -41,8 +41,8 @@ const ReportTable = ({ students, onViewReport, onEditReport, onAddMark }) => (
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
   <div className="mt-6 flex flex-wrap items-center justify-center">
-    <button 
-      onClick={() => onPageChange(currentPage - 1)} 
+    <button
+      onClick={() => onPageChange(currentPage - 1)}
       disabled={currentPage === 1}
       className="px-3 py-1 m-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
@@ -51,8 +51,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => (
     <span className="mx-2 text-sm text-gray-700">
       Page {currentPage} of {totalPages}
     </span>
-    <button 
-      onClick={() => onPageChange(currentPage + 1)} 
+    <button
+      onClick={() => onPageChange(currentPage + 1)}
       disabled={currentPage === totalPages}
       className="px-3 py-1 m-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
@@ -185,10 +185,10 @@ const Reports = () => {
       )}
 
       {isAdding && (
-        <AddMark 
+        <AddMark
           student={selectedStudent}
-          onAdd={() => { setSelectedStudent(null); setIsAdding(false); fetchStudents(); }} 
-          onClose={() => { setSelectedStudent(null); setIsAdding(false); }} 
+          onAdd={() => { setSelectedStudent(null); setIsAdding(false); fetchStudents(); }}
+          onClose={() => { setSelectedStudent(null); setIsAdding(false); }}
         />
       )}
     </div>

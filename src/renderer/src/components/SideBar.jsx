@@ -13,13 +13,13 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
   ];
 
   return (
-    <div className={`${isOpen ? 'w-64' : 'w-20'} bg-gray-100 text-gray-800 h-screen transition-all duration-300 ease-in-out`}>
-      <div className="p-20">
-        
+    <div className={`${isOpen ? 'w-64' : 'w-20'} px-[10px] bg-gray-100 text-gray-800 h-screen transition-all duration-300 ease-in-out bg-gradient-to-b from-gray-100 to-gray-200`}>
+      <div className="p-3">
+
       </div>
       <nav className="mt-8">
         {menuItems.map((item) => (
-          <button 
+          <button
             key={item.name}
             className={`w-full text-left py-3 px-4 rounded-lg transition duration-200 ${
               currentPage === item.name ? 'bg-blue-500 text-white' : 'hover:bg-gray-200'

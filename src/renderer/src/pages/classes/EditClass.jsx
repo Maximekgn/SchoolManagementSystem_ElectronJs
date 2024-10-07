@@ -30,7 +30,7 @@ const EditClass = ({ classDetails, onClose }) => {
     try {
       const formData = { id: classDetails.id, name: className, class_fees: parseFloat(classFees) };
       const response = await window.electron.ipcRenderer.invoke('update-class', formData);
-      
+
       if (response.success) {
         console.log("Class updated successfully:", response.updatedId);
         onClose();
@@ -43,12 +43,12 @@ const EditClass = ({ classDetails, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ease-in-out">
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 ease-in-out show-up">
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-300 ease-in-out scale-95 sm:scale-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Edit Class</h2>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
             aria-label="Close"
           >
@@ -96,8 +96,8 @@ const EditClass = ({ classDetails, onClose }) => {
           </div>
 
           <div className="flex justify-end">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
             >
               Save Changes

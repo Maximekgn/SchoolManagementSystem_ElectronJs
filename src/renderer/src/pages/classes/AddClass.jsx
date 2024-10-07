@@ -38,7 +38,7 @@ const AddClass = ({ onAddClass, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-75 backdrop-blur-sm overflow-y-auto h-full w-full flex items-center justify-center show-up">
       <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 ease-in-out">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-3xl font-bold text-gray-900">Add New Class</h3>

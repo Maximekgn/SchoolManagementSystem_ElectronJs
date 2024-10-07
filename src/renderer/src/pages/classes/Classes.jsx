@@ -39,8 +39,8 @@ const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
   <div className="mt-6 flex items-center justify-center space-x-4">
-    <button 
-      onClick={() => onPageChange(currentPage - 1)} 
+    <button
+      onClick={() => onPageChange(currentPage - 1)}
       disabled={currentPage === 1}
       className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
@@ -49,8 +49,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => (
     <span className="text-sm text-gray-700">
       Page {currentPage} of {totalPages}
     </span>
-    <button 
-      onClick={() => onPageChange(currentPage + 1)} 
+    <button
+      onClick={() => onPageChange(currentPage + 1)}
       disabled={currentPage === totalPages}
       className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
     >
@@ -92,11 +92,14 @@ const Classes = () => {
   };
 
   const handleDeleteClass = async (id) => {
-    try {
-      await window.electron.ipcRenderer.invoke('delete-class', id);
-      await fetchClasses();
-    } catch (error) {
-      console.error('Error deleting class:', error);
+    const confirmation = window.confirm("Are you sure you want to delete this class?");
+    if (confirmation) {
+      try {
+        await window.electron.ipcRenderer.invoke('delete-class', id);
+        await fetchClasses();
+      } catch (error) {
+        console.error('Error deleting class:', error);
+      }
     }
   };
 
@@ -111,12 +114,12 @@ const Classes = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8 max-w-6xl show-up">
       <h1 className="text-4xl font-bold mb-8 text-gray-800">Class Management</h1>
 
       <div className="mb-8 flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-        <button 
-          onClick={() => setIsAdding(true)} 
+        <button
+          onClick={() => setIsAdding(true)}
           className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center justify-center"
         >
           <FiPlus className="mr-2" /> Add Class

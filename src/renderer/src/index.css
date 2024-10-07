@@ -2,7 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Manrope";
+  src: url("./fonts/Manrope-Regular.ttf");
+}
 
+body {
+  font-family: "Manrope", sans-serif;
+}
+
+.pop-up {
+  animation: popup 0.5s ease-in-out;
+}
+
+.show-up {
+  animation: show-up 0.5s ease-in-out;
+}
+
+.fade-out {
+  animation: fade-out 0.5s ease-in-out;
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes show-up {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popup {
+  from {
+    transform: translateY(20px);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
 
 ::-webkit-scrollbar {
   width: 5px;
@@ -11,31 +60,34 @@
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #FFFFFF; 
+  background: #FFFFFF;
 }
- 
-.filter::-webkit-scrollbar-track{
-  background: #1C6758; 
+
+.filter::-webkit-scrollbar-track {
+  background: #1C6758;
 }
+
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #1C6758; 
+  background: #1C6758;
 }
 
 .filter::-webkit-scrollbar {
   width: 3px;
   height: 3px;
 }
+
 .filter::-webkit-scrollbar-thumb {
-  background: #FFFFFF; 
+  background: #FFFFFF;
 }
+
 .filter::-webkit-scrollbar-thumb:hover {
-  background: #FFFFFF; 
+  background: #FFFFFF;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #1C6758; 
+  background: #1C6758;
 }
 
 body {
@@ -59,52 +111,49 @@ input::-webkit-inner-spin-button {
 }
 
 input[type=number] {
-  -moz-appearance:textfield; /* Firefox */
+  -moz-appearance: textfield;
+  /* Firefox */
 }
 
-.TitleBar{
+.TitleBar {
   -webkit-user-select: none;
   -webkit-app-region: drag;
 }
 
 .toastBody {
-  color: #4e6d87; 
+  color: #4e6d87;
   font-size: 16px !important;
 }
 
 
 
-@layer components{
-  .TitleBar{
-    @apply fixed overflow-auto top-0 max-h-[32px] min-h-[32px] min-w-full font-normal text-base flex items-center justify-between
-      pl-2 z-20 text-white
-  }
-  
-  .TitleBarIcons{
-    -webkit-app-region: no-drag;
-    @apply h-5 w-5 text-white ml-2 mr-2 
+@layer components {
+  .TitleBar {
+    @apply fixed overflow-auto top-0 max-h-[32px] min-h-[32px] min-w-full font-normal text-base flex items-center justify-between pl-2 z-20 text-white
   }
 
-  .Drawer{
+  .TitleBarIcons {
+    -webkit-app-region: no-drag;
+    @apply h-5 w-5 text-white ml-2 mr-2
+  }
+
+  .Drawer {
     @apply flex pl-2 pt-2 pb-2 bg-transparent text-white mt-20 min-w-max flex-col
   }
 
-  .DrawerItem{
-    @apply flex h-12 w-12 items-center justify-center p-2 text-center mb-1
-       hover:bg-gray-100 hover:opacity-50 cursor-pointer hover:text-primary
-      transition ease-in-out delay-75 rounded-r-none
+  .DrawerItem {
+    @apply flex h-12 w-12 items-center justify-center p-2 text-center mb-1 hover:bg-gray-100 hover:opacity-50 cursor-pointer hover:text-primary transition ease-in-out delay-75 rounded-r-none
   }
 
-  .DrawerItemSelected{
-    @apply  bg-gray-100 text-primary hover:bg-gray-100 hover:opacity-100
+  .DrawerItemSelected {
+    @apply bg-gray-100 text-primary hover:bg-gray-100 hover:opacity-100
   }
 
-  .TextBox{
-    @apply min-h-[40px] w-[250px] shadow-lg pl-[6px] text-black text-[16px] border-b-primary 
-      border-2 outline-none rounded
+  .TextBox {
+    @apply min-h-[40px] w-[250px] shadow-lg pl-[6px] text-black text-[16px] border-b-primary border-2 outline-none rounded
   }
 
-  .Button{
+  .Button {
     @apply min-h-[40px] pl-1 pr-1 rounded text-[16px] bg-primary text-white hover:shadow-lg
   }
 
