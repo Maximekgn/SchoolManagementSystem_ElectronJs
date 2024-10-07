@@ -67,30 +67,30 @@ const AddStudentForm = ({ onAdd, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (validateForm()) {
       setIsSubmitting(true);
-  
+
       try {
         const selectedClass = classes.find(cls => cls.id == formData.classId);
-  
+
         if (!selectedClass) {
           setErrors(prev => ({ ...prev, classId: 'Invalid class selected.' }));
           setIsSubmitting(false);
           return;
         }
-  
+
         const schoolFee = Number(selectedClass.class_fees) - Number(formData.discountFee);
-  
+
         const updatedFormData = {
           ...formData,
           schoolFee: schoolFee,
           paidFee: 0,
           additionalNote: formData.additionalNote || ''
         };
-  
+
         const result = await window.electron.ipcRenderer.invoke('add-student', updatedFormData);
-  
+
         if (result.success) {
           onAdd(result);
           setFormData(initialFormData);
@@ -98,7 +98,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
         } else {
           throw new Error(result.error || 'Failed to add student');
         }
-  
+
       } catch (error) {
         console.error('Error adding student:', error);
         setErrors(prev => ({
@@ -110,7 +110,7 @@ const AddStudentForm = ({ onAdd, onClose }) => {
       }
     }
   };
-  
+
   const renderField = (name, label, type = 'text', options = null, icon = null) => (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>

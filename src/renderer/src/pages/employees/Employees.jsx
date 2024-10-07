@@ -41,8 +41,8 @@ const EmployeeTable = ({ employees, onViewEmployee, onEditEmployee, onDeleteEmpl
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => (
   <div className="mt-4 flex items-center justify-center">
-    <button 
-      onClick={() => onPageChange(currentPage - 1)} 
+    <button
+      onClick={() => onPageChange(currentPage - 1)}
       disabled={currentPage === 1}
       className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
     >
@@ -51,8 +51,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => (
     <span className="mx-4 text-sm text-gray-700">
       Page {currentPage} of {totalPages}
     </span>
-    <button 
-      onClick={() => onPageChange(currentPage + 1)} 
+    <button
+      onClick={() => onPageChange(currentPage + 1)}
       disabled={currentPage === totalPages}
       className="px-4 py-2 border rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
     >
@@ -95,11 +95,14 @@ const Employees = () => {
   };
 
   const handleDeleteEmployee = async (id) => {
-    try {
-      await window.electron.ipcRenderer.invoke('delete-employee', id);
-      await fetchEmployees();
-    } catch (error) {
-      console.error('Error deleting employee:', error);
+    const confirmation = window.confirm("Are you sure you want to delete this employee?");
+    if (confirmation) {
+      try {
+        await window.electron.ipcRenderer.invoke('delete-employee', id);
+        await fetchEmployees();
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+      }
     }
   };
 
@@ -118,8 +121,8 @@ const Employees = () => {
       <h1 className="text-3xl font-bold mb-6 text-gray-800">Employee Management</h1>
 
       <div className="mb-6 flex items-center justify-between">
-        <button 
-          onClick={() => setIsAdding(true)} 
+        <button
+          onClick={() => setIsAdding(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out flex items-center"
         >
           <FiUserPlus className="mr-2" /> Add Employee

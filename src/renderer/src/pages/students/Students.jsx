@@ -114,6 +114,7 @@ const Students = () => {
   const [studentsPerPage, setStudentsPerPage] = useState(10);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState("");
+  const [isVisibleConfirmDialog, SetIsVisibleConfirmDialog] = useState(false);
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -155,13 +156,15 @@ const Students = () => {
       console.error("Error adding student:", error);
     }
   };
-
   const handleDeleteStudent = async (id) => {
-    try {
-      await window.electron.ipcRenderer.invoke("delete-student", id);
-      await fetchStudents();
-    } catch (error) {
-      console.error("Error deleting student:", error);
+    const confirmation = window.confirm("Are you sure you want to delete this student?");
+    if (confirmation) {
+      try {
+        await window.electron.ipcRenderer.invoke("delete-student", id);
+        await fetchStudents();
+      } catch (error) {
+        console.error("Error deleting student:", error);
+      }
     }
   };
 
@@ -238,6 +241,13 @@ const Students = () => {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
+
+      {isVisibleConfirmDialog && (
+        <ConfirmStudentDelete
+          student={selectedStudent}
+          onClose={() => SetIsVisibleConfirmDialog(false)}
+        />
+      )}
 
       {isViewing && (
         <ViewStudent
