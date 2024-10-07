@@ -2,7 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Manrope";
+  src: url("./fonts/Manrope-Regular.ttf");
+}
 
+body {
+  font-family: "Manrope", sans-serif;
+}
 
 ::-webkit-scrollbar {
   width: 5px;
@@ -11,15 +18,15 @@
 
 /* Track */
 ::-webkit-scrollbar-track {
-  background: #FFFFFF; 
+  background: #FFFFFF;
 }
- 
+
 .filter::-webkit-scrollbar-track{
-  background: #1C6758; 
+  background: #1C6758;
 }
 /* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #1C6758; 
+  background: #1C6758;
 }
 
 .filter::-webkit-scrollbar {
@@ -27,15 +34,15 @@
   height: 3px;
 }
 .filter::-webkit-scrollbar-thumb {
-  background: #FFFFFF; 
+  background: #FFFFFF;
 }
 .filter::-webkit-scrollbar-thumb:hover {
-  background: #FFFFFF; 
+  background: #FFFFFF;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #1C6758; 
+  background: #1C6758;
 }
 
 body {
@@ -68,7 +75,7 @@ input[type=number] {
 }
 
 .toastBody {
-  color: #4e6d87; 
+  color: #4e6d87;
   font-size: 16px !important;
 }
 
@@ -79,10 +86,10 @@ input[type=number] {
     @apply fixed overflow-auto top-0 max-h-[32px] min-h-[32px] min-w-full font-normal text-base flex items-center justify-between
       pl-2 z-20 text-white
   }
-  
+
   .TitleBarIcons{
     -webkit-app-region: no-drag;
-    @apply h-5 w-5 text-white ml-2 mr-2 
+    @apply h-5 w-5 text-white ml-2 mr-2
   }
 
   .Drawer{
@@ -100,7 +107,7 @@ input[type=number] {
   }
 
   .TextBox{
-    @apply min-h-[40px] w-[250px] shadow-lg pl-[6px] text-black text-[16px] border-b-primary 
+    @apply min-h-[40px] w-[250px] shadow-lg pl-[6px] text-black text-[16px] border-b-primary
       border-2 outline-none rounded
   }
 
