@@ -22,8 +22,8 @@ const Dashboard = () => {
       setTotalClasses(classes?.length || 0);
 
       if (payments) {
-        setTotalRegistrationsFee(payments.filter(payment => payment.title.toLowerCase().trim() === 'registration fee').reduce((sum, payment) => sum + payment.amount_paid, 0));
-        setTotalTuitionFee(payments.filter(payment => payment.title.toLowerCase().trim() === 'tuition fee').reduce((sum, payment) => sum + payment.amount_paid, 0));
+        setTotalRegistrationsFee(payments.filter(payment => payment.title.toLowerCase().trim() === 'registration fee').reduce((sum, payment) => sum + payment.amountPaid, 0));
+        setTotalTuitionFee(payments.filter(payment => payment.title.toLowerCase().trim() === 'tuition fee').reduce((sum, payment) => sum + payment.amountPaid, 0));
       }
     } catch (error) {
       console.error('Error fetching data:', error);

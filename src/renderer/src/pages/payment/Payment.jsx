@@ -84,7 +84,7 @@ const Payment = () => {
       setLoading(true);
       const response = await window.electron.ipcRenderer.invoke('get-students');
       const studentsWithDiscount = await Promise.all(response.map(async (student) => {
-        const totalDiscount = await getTotalDiscount(student);
+        const totalDiscount = await getTotalDiscount(student.id);
         return { ...student, totalDiscount };
       }));
       setStudents(studentsWithDiscount);
@@ -97,11 +97,13 @@ const Payment = () => {
     }
   }, []);
 
-  const getTotalDiscount = useCallback(async (student) => {
+  const getTotalDiscount = useCallback(async (studentId) => {
     try {
-      const response = await window.electron.ipcRenderer.invoke('get-payments', student.id);
+      const response = await window.electron.ipcRenderer.invoke('get-payments', studentId);
       if (response.success) {
-        return response.payments.reduce((sum, payment) => sum + (payment.discount || 0), 0);
+        return response.payments
+          .filter(payment => payment.title.toLowerCase() === 'tuition fee')
+          .reduce((sum, payment) => sum + (payment.discount || 0), 0);
       }
       return 0;
     } catch (error) {

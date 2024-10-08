@@ -156,9 +156,9 @@ ipcMain.handle("add-student", async (event, formData) => {
   return new Promise((resolve, reject) => {
     const query = `INSERT INTO students (
       name, surname, birthDate, birthPlace, gender, admissionDate, classId, 
-       schoolFee, paidFee, bloodGroup, medicalCondition, 
+      schoolFee, paidFee, bloodGroup, medicalCondition, 
       previousSchool, religion, additionalNote, parentName, parentSurname, parentPhone, picture
-    ) VALUES (${',?'.repeat(19).slice(1)})`;
+    ) VALUES (${',?'.repeat(18).slice(1)})`;
 
     const values = [
       formData.name, formData.surname, formData.birthDate, formData.birthPlace,
@@ -328,7 +328,6 @@ ipcMain.handle("update-employee", async (event, formData) => {
 ipcMain.handle("add-employee", async (event, newEmployee) => {
   return new Promise((resolve, reject) => {
     try {
-      delete newEmployee.date_of_birth;
       console.log("Received employee data:", newEmployee);
 
       const insertQuery = `
@@ -381,9 +380,9 @@ ipcMain.handle("get-classes", (event, args) => {
 // to add a new class
 ipcMain.handle("add-class", async (event, newClass) => {
   return new Promise((resolve, reject) => {
-    const query = 'INSERT INTO classes (name, class_fees) VALUES (?, ?)';
-    const { name,  class_fees } = newClass;
-    database.run(query, [name,  class_fees], function(err) {
+    const query = 'INSERT INTO classes (name, classFee) VALUES (?, ?)';
+    const { name, classFee } = newClass;
+    database.run(query, [name, classFee], function(err) {
       if (err) {
         console.error('Error adding class:', err.message);
         reject({ success: false, error: err.message });
@@ -420,13 +419,13 @@ ipcMain.handle("update-class", async (event, formData) => {
     const query = `
       UPDATE classes SET 
         name = ?, 
-        class_fees = ?
+        classFee = ?
       WHERE id = ? 
     `; 
 
-    const { name, class_fees, id } = formData;
+    const { name, classFee, id } = formData;
     return new Promise((resolve, reject) => {
-      database.run(query, [name, class_fees, id], function(err) {
+      database.run(query, [name, classFee, id], function(err) {
         if (err) {
           console.error("Error updating class:", err.message);
           reject({ success: false, error: err.message });
@@ -434,11 +433,11 @@ ipcMain.handle("update-class", async (event, formData) => {
           resolve({ success: true, updatedId: this.lastID });
         }
       });
-    // update all student school_fee who are in this class
+    // update all student schoolFee who are in this class
     const query2 = 'UPDATE students SET schoolFee = ? WHERE classId = ?';
-    database.run(query2, [class_fees, id], function(err) {
+    database.run(query2, [classFee, id], function(err) {
       if (err) {
-        console.error("Error updating class:", err.message);
+        console.error("Error updating students' schoolFee:", err.message);
         reject({ success: false, error: err.message });
       } else {
         resolve({ success: true, updatedId: this.lastID });
@@ -539,10 +538,10 @@ ipcMain.handle("get-all-payments", async (event, args) => {
 });
 
 //get student payements
-ipcMain.handle("get-payments", async (event, student_id) => {
+ipcMain.handle("get-payments", async (event, studentId) => {
   return new Promise((resolve, reject) => {
-    const query = 'SELECT * FROM student_payments WHERE student_id = ?';
-    database.all(query, [student_id], (err, rows) => {
+    const query = 'SELECT * FROM student_payments WHERE studentId = ?';
+    database.all(query, [studentId], (err, rows) => {
       if (err) {
         console.error('Error fetching student payments:', err.message);
         reject({ success: false, error: err.message });
@@ -557,9 +556,9 @@ ipcMain.handle("get-payments", async (event, student_id) => {
 ipcMain.handle("make-payment", async (event, newPayment) => {
   return new Promise((resolve, reject) => {
     console.log("Received payment data:", newPayment);
-    const query = 'INSERT INTO student_payments (title, student_id, discount, payment_date, amount_paid ,amount) VALUES (?, ?, ?, ?, ?,?)';
-    const { title, student_id, discount, payment_date, amount_paid ,amount} = newPayment;
-    database.run(query, [title, student_id, discount, payment_date, amount_paid ,amount], function(err) {
+    const query = 'INSERT INTO student_payments (title, studentId, discount, paymentDate, amountPaid, amount) VALUES (?, ?, ?, ?, ?, ?)';
+    const { title, studentId, discount, paymentDate, amountPaid, amount } = newPayment;
+    database.run(query, [title, studentId, discount, paymentDate, amountPaid, amount], function(err) {
       if (err) {
         console.error('Error adding payment:', err.message);
         reject({ success: false, error: err.message });
@@ -567,16 +566,16 @@ ipcMain.handle("make-payment", async (event, newPayment) => {
         resolve({ success: true, insertedId: this.lastID });
       }
     });
-    if (newPayment.title.toLowerCase() =="Tuition fee".toLowerCase()) 
+    if (newPayment.title.toLowerCase() === "Tuition fee".toLowerCase()) 
     {
-      // augmenter paidFee dans la table student
+      // increase paidFee in the students table
       const query2 = 'UPDATE students SET paidFee = paidFee + ? WHERE id = ?';
-      database.run(query2, [amount_paid, student_id], function(err) {
+      database.run(query2, [amountPaid, studentId], function(err) {
       if (err) {
-        console.error('Error adding payment:', err.message);
+        console.error('Error updating student paidFee:', err.message);
         reject({ success: false, error: err.message });
       } else {
-        resolve({ success: true, insertedId: this.lastID });
+        resolve({ success: true, updatedId: this.lastID });
       }
       });
     }
@@ -586,9 +585,9 @@ ipcMain.handle("make-payment", async (event, newPayment) => {
 //to edit a payment
 ipcMain.handle("edit-payment", async (event, editedPayment) => {
   return new Promise((resolve, reject) => {
-    const query = 'UPDATE student_payments SET title = ?, student_id = ?, discount = ?, payment_date = ?, amount_paid = ? , amount = ? WHERE id = ?';
-    const { id, title, student_id, discount, payment_date, amount_paid , amount} = editedPayment;
-    database.run(query, [title, student_id, discount, payment_date, amount_paid , amount, id], function(err) {
+    const query = 'UPDATE student_payments SET title = ?, studentId = ?, discount = ?, paymentDate = ?, amountPaid = ?, amount = ? WHERE id = ?';
+    const { id, title, studentId, discount, paymentDate, amountPaid, amount } = editedPayment;
+    database.run(query, [title, studentId, discount, paymentDate, amountPaid, amount, id], function(err) {
       if (err) {
         console.error('Error editing payment:', err.message);
         reject({ success: false, error: err.message });
@@ -596,13 +595,13 @@ ipcMain.handle("edit-payment", async (event, editedPayment) => {
         resolve({ success: true, updatedId: this.lastID });
       }
     });
-    if (editedPayment.title.toLowerCase() =="Tuition fee".toLowerCase()) 
+    if (editedPayment.title.toLowerCase() === "Tuition fee".toLowerCase()) 
     {
-      // augmenter paidFee dans la table student
-      const query2 = 'UPDATE students SET paidFee = paidFee + ? WHERE id = ?';
-      database.run(query2, [amount_paid, student_id], function(err) {
+      // update paidFee in the students table
+      const query2 = 'UPDATE students SET paidFee =  ? WHERE id = ?';
+      database.run(query2, [amountPaid, studentId], function(err) {
       if (err) {
-        console.error('Error adding payment:', err.message);
+        console.error('Error updating student paidFee:', err.message);
         reject({ success: false, error: err.message });
       }
     });
@@ -672,56 +671,3 @@ ipcMain.handle("delete-student-note", async (event, noteId) => {
   });
 });
 
-ipcMain.handle('print-to-pdf', async (event) => {
-  const win = BrowserWindow.getFocusedWindow();
-  if (!win) {
-    throw new Error('Aucune fenêtre active trouvée');
-  }
-
-  try {
-    // Obtenir la liste des imprimantes
-    const printers = await win.webContents.getPrintersAsync();
-    
-    if (printers.length === 0) {
-      dialog.showErrorBox('Erreur d\'impression', 
-        'Aucune imprimante n\'a été trouvée. Veuillez vérifier que:\n' +
-        '1. Une imprimante est installée\n' +
-        '2. Le service d\'impression Windows est actif\n' +
-        '3. Vous avez les droits d\'accès nécessaires'
-      );
-      return { success: false, error: 'NO_PRINTERS' };
-    }
-
-    // Configuration de l'impression
-    const printOptions = {
-      silent: false,
-      printBackground: true,
-      deviceName: printers[0].name, // Utilise la première imprimante par défaut
-      color: true,
-      margins: {
-        marginType: 'printableArea'
-      },
-      landscape: false
-    };
-
-    return new Promise((resolve) => {
-      win.webContents.print(printOptions, (success, error) => {
-        if (success) {
-          resolve({ success: true });
-        } else {
-          dialog.showErrorBox('Erreur d\'impression', 
-            `L'impression a échoué. Erreur: ${error}\n` +
-            'Veuillez vérifier votre connexion à l\'imprimante.'
-          );
-          resolve({ success: false, error });
-        }
-      });
-    });
-  } catch (error) {
-    dialog.showErrorBox('Erreur système', 
-      `Une erreur est survenue: ${error.message}\n` +
-      'Essayez de redémarrer l\'application.'
-    );
-    return { success: false, error: error.message };
-  }
-});

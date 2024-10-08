@@ -18,7 +18,7 @@ const ClassTable = ({ classes, onViewClass, onEditClass, onDeleteClass }) => (
         {classes.map((classItem) => (
           <tr key={classItem.id} className="hover:bg-gray-50 transition-colors duration-200">
             <td className="px-6 py-4 text-sm font-medium text-gray-900">{classItem.name}</td>
-            <td className="px-6 py-4 text-sm text-gray-600">{classItem.class_fees.toFixed(2)} FCFA</td>
+            <td className="px-6 py-4 text-sm text-gray-600">{classItem.classFee.toFixed(2)} FCFA</td>
             <td className="px-6 py-4 text-sm space-x-2">
               <button onClick={() => onViewClass(classItem)} className="text-blue-500 hover:text-blue-700 transition-colors duration-200">
                 <FiEye className="inline-block mr-1" /> View
@@ -57,7 +57,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => (
       Next
     </button>
   </div>
-);
+) ;
+
+
 
 const Classes = () => {
   const [classes, setClasses] = useState([]);
@@ -92,15 +94,14 @@ const Classes = () => {
   };
 
   const handleDeleteClass = async (id) => {
-    const confirmation = window.confirm("Are you sure you want to delete this class?");
-    if (confirmation) {
+    
       try {
+        
         await window.electron.ipcRenderer.invoke('delete-class', id);
         await fetchClasses();
       } catch (error) {
         console.error('Error deleting class:', error);
       }
-    }
   };
 
   const filteredClasses = classes.filter((cls) =>

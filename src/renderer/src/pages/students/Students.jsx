@@ -157,15 +157,13 @@ const Students = () => {
     }
   };
   const handleDeleteStudent = async (id) => {
-    const confirmation = window.confirm("Are you sure you want to delete this student?");
-    if (confirmation) {
       try {
         await window.electron.ipcRenderer.invoke("delete-student", id);
         await fetchStudents();
       } catch (error) {
         console.error("Error deleting student:", error);
       }
-    }
+    
   };
 
   const filteredStudents = students.filter(

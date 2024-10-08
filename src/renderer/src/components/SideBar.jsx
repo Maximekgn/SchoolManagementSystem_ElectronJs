@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiHome, FiUsers, FiBriefcase, FiDollarSign, FiSettings, FiFileText } from 'react-icons/fi';
 
-const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
+const SideBar = ({ setCurrentPage, currentPage }) => {
   const menuItems = [
     { name: 'dashboard', icon: FiHome, label: 'Dashboard' },
     { name: 'students', icon: FiUsers, label: 'Students' },
@@ -13,7 +13,7 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
   ];
 
   return (
-    <div className={`${isOpen ? 'w-64' : 'w-20'} px-[10px] bg-gray-100 text-gray-800 h-screen transition-all duration-300 ease-in-out bg-gradient-to-b from-gray-100 to-gray-200`}>
+    <div className="w-64 px-[10px] bg-gray-100 text-gray-800 h-screen bg-gradient-to-b from-gray-100 to-gray-200">
       <div className="p-3">
 
       </div>
@@ -26,8 +26,8 @@ const SideBar = ({ setCurrentPage, currentPage, isOpen }) => {
             } flex items-center space-x-3`}
             onClick={() => setCurrentPage(item.name)}
           >
-            <item.icon className={`w-6 h-6 ${isOpen ? 'mr-3' : 'mx-auto'}`} />
-            <span className={`text-sm font-medium ${isOpen ? 'block' : 'hidden'}`}>{item.label}</span>
+            <item.icon className="w-6 h-6 mr-3" />
+            <span className="text-sm font-medium">{item.label}</span>
           </button>
         ))}
       </nav>

@@ -136,7 +136,6 @@ const Reports = () => {
     if (password === '6002') {
       setIsAuthenticated(true);
     } else {
-      alert('Incorrect password');
     }
   };
 

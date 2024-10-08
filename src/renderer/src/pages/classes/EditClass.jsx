@@ -9,7 +9,7 @@ const EditClass = ({ classDetails, onClose }) => {
   useEffect(() => {
     if (classDetails) {
       setClassName(classDetails.name);
-      setClassFees(classDetails.class_fees);
+      setClassFees(classDetails.classFee);
     }
   }, [classDetails]);
 
@@ -28,7 +28,7 @@ const EditClass = ({ classDetails, onClose }) => {
     }
 
     try {
-      const formData = { id: classDetails.id, name: className, class_fees: parseFloat(classFees) };
+      const formData = { id: classDetails.id, name: className, classFee: parseFloat(classFees) };
       const response = await window.electron.ipcRenderer.invoke('update-class', formData);
 
       if (response.success) {
@@ -113,7 +113,7 @@ EditClass.propTypes = {
   classDetails: PropTypes.shape({
     id: PropTypes.number.isRequired,
     name: PropTypes.string.isRequired,
-    class_fees: PropTypes.number.isRequired,
+    classFee: PropTypes.number.isRequired,
   }).isRequired,
   onClose: PropTypes.func.isRequired,
 };

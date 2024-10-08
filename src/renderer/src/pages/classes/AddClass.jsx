@@ -30,7 +30,7 @@ const AddClass = ({ onAddClass, onClose }) => {
 
     const newClass = {
       name: className,
-      class_fees: parsedClassFees,
+      classFee: parsedClassFees,
     };
 
     onAddClass(newClass);

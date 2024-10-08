@@ -95,15 +95,12 @@ const Employees = () => {
   };
 
   const handleDeleteEmployee = async (id) => {
-    const confirmation = window.confirm("Are you sure you want to delete this employee?");
-    if (confirmation) {
       try {
         await window.electron.ipcRenderer.invoke('delete-employee', id);
         await fetchEmployees();
       } catch (error) {
         console.error('Error deleting employee:', error);
       }
-    }
   };
 
   const filteredEmployees = employees.filter((employee) =>

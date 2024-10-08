@@ -19,10 +19,10 @@ const AddPayment = ({ studentId, onClose }) => {
 
     const newPayment = {
       title,
-      student_id: studentId,
-      payment_date: paymentDate,
+      studentId: studentId,
+      paymentDate: paymentDate,
       amount: amount,
-      amount_paid: amount - discount,
+      amountPaid: amount - discount,
       discount: discount,
     };
 

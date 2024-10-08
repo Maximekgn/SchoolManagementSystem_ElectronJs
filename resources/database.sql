@@ -2,22 +2,22 @@
 CREATE TABLE IF NOT EXISTS classes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  class_fees REAL DEFAULT 0
+  classFee REAL DEFAULT 0
 );
 
-INSERT INTO classes (name, class_fees) VALUES ('CP1', 0);
-INSERT INTO classes (name, class_fees) VALUES ('CP2', 0);
-INSERT INTO classes (name, class_fees) VALUES ('CE1', 0);
-INSERT INTO classes (name, class_fees) VALUES ('CE2', 0);
-INSERT INTO classes (name, class_fees) VALUES ('CM1', 0);
-INSERT INTO classes (name, class_fees) VALUES ('CM2', 0);
-INSERT INTO classes (name, class_fees) VALUES ('6ème', 0);
-INSERT INTO classes (name, class_fees) VALUES ('5ème', 0);
-INSERT INTO classes (name, class_fees) VALUES ('4ème', 0);
-INSERT INTO classes (name, class_fees) VALUES ('3ème', 0);
-INSERT INTO classes (name, class_fees) VALUES ('S1', 0);
-INSERT INTO classes (name, class_fees) VALUES ('S2', 0);
-INSERT INTO classes (name, class_fees) VALUES ('S3', 0);
+INSERT INTO classes (name, classFee) VALUES ('CP1', 0);
+INSERT INTO classes (name, classFee) VALUES ('CP2', 0);
+INSERT INTO classes (name, classFee) VALUES ('CE1', 0);
+INSERT INTO classes (name, classFee) VALUES ('CE2', 0);
+INSERT INTO classes (name, classFee) VALUES ('CM1', 0);
+INSERT INTO classes (name, classFee) VALUES ('CM2', 0);
+INSERT INTO classes (name, classFee) VALUES ('6ème', 0);
+INSERT INTO classes (name, classFee) VALUES ('5ème', 0);
+INSERT INTO classes (name, classFee) VALUES ('4ème', 0);
+INSERT INTO classes (name, classFee) VALUES ('3ème', 0);
+INSERT INTO classes (name, classFee) VALUES ('S1', 0);
+INSERT INTO classes (name, classFee) VALUES ('S2', 0);
+INSERT INTO classes (name, classFee) VALUES ('S3', 0);
 
 
 
@@ -267,27 +267,27 @@ CREATE TABLE IF NOT EXISTS employees (
 
 
 -- Ajout d'une colonne pour le montant total de la scolarité dans la table students
-ALTER TABLE students ADD COLUMN total_fees REAL DEFAULT 0;
+ALTER TABLE students ADD COLUMN totalFees REAL DEFAULT 0;
 
 -- Table des paiements des étudiants (Student_Payments)
 CREATE TABLE IF NOT EXISTS student_payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
-  student_id INTEGER NOT NULL,
+  studentId INTEGER NOT NULL,
   paymentDate DATE NOT NULL,
   amount REAL NOT NULL,
-  amount_paid REAL NOT NULL,
+  amountPaid REAL NOT NULL,
   discount REAL DEFAULT 0,
   description TEXT,
-  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+  FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE CASCADE
 );
 
 -- Table des notes des étudiants (Student_Notes)
 CREATE TABLE IF NOT EXISTS student_notes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  student_id INTEGER NOT NULL,
+  studentId INTEGER NOT NULL,
   title TEXT NOT NULL,
   value REAL NOT NULL,
   noteDate DATE NOT NULL,
-  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+  FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE CASCADE
 );  

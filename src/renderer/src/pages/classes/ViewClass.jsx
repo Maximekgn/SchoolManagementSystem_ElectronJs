@@ -36,7 +36,7 @@ const ViewClass = ({ classDetails, onClose }) => {
     );
   }
 
-  const { name, capacity, class_fees } = classDetails;
+  const { name, capacity, classFee } = classDetails;
 
   return (
     <div
@@ -63,11 +63,11 @@ const ViewClass = ({ classDetails, onClose }) => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-sm font-medium text-gray-500 mb-1">Class Name</p>
             <p className="text-lg font-semibold text-gray-900">{name || 'N/A'}</p>
-          </div>
+          </div> 
 
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="text-sm font-medium text-gray-500 mb-1">Fees</p>
-            <p className="text-lg font-semibold text-gray-900">{class_fees !== undefined ? `FCFA ${class_fees}` : 'N/A'}</p>
+            <p className="text-lg font-semibold text-gray-900">{classFee !== undefined ? `FCFA ${classFee}` : 'N/A'}</p>
           </div>
 
           {capacity !== undefined && (

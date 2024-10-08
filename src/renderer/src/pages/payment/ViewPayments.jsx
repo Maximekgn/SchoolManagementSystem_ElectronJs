@@ -49,7 +49,7 @@ const ViewPayments = ({ studentId, onClose }) => {
 
   const handleSaveEdit = async (editedPayment) => {
     try {
-      editedPayment.amount_paid = editedPayment.amount - editedPayment.discount;
+      editedPayment.amountPaid = editedPayment.amount - editedPayment.discount;
       const result = await window.electron.ipcRenderer.invoke('edit-payment', editedPayment);
       if (result.success) {
         setEditingPayment(null);
@@ -108,7 +108,7 @@ const ViewPayments = ({ studentId, onClose }) => {
                   <h3 className="font-semibold text-xl text-indigo-700">{category}</h3>
                   <div className="flex items-center">
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium mr-3">
-                      {categoryPayments.reduce((sum, payment) => sum + payment.amount_paid, 0)} FCFA
+                      {categoryPayments.reduce((sum, payment) => sum + payment.amountPaid, 0)} FCFA
                     </span>
                     <button
                       onClick={() => toggleCategory(category)}
@@ -126,8 +126,8 @@ const ViewPayments = ({ studentId, onClose }) => {
                           <div className="space-y-4">
                             <input
                               type="date"
-                              value={editingPayment.payment_date}
-                              onChange={(e) => setEditingPayment({...editingPayment, payment_date: e.target.value})}
+                              value={editingPayment.paymentDate}
+                              onChange={(e) => setEditingPayment({...editingPayment, paymentDate: e.target.value})}
                               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                             <input
@@ -156,7 +156,7 @@ const ViewPayments = ({ studentId, onClose }) => {
                                 <FiCalendar className="mr-2 text-indigo-500" />
                                 <span className="text-gray-700 font-medium">Date:</span>
                               </div>
-                              <span className="text-gray-800">{new Date(payment.payment_date).toLocaleDateString()}</span>
+                              <span className="text-gray-800">{new Date(payment.paymentDate).toLocaleDateString()}</span>
 
                               <div className="flex items-center">
                                 <FiDollarSign className="mr-2 text-indigo-500" />

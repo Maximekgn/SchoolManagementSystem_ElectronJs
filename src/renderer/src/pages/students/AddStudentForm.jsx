@@ -6,7 +6,6 @@ import {
   FiUsers,
   FiBookOpen,
   FiHeart,
-  FiDollarSign,
   FiPhone,
 } from "react-icons/fi";
 
