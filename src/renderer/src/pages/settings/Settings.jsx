@@ -4,6 +4,17 @@ import { FiTrash2, FiDownload, FiAlertTriangle } from 'react-icons/fi';
 const Settings = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [resetMessage, setResetMessage] = useState('');
+  const [password, setPassword] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (password === '6002') {
+      setIsAuthenticated(true);
+    } else {
+      alert('Incorrect password');
+    }
+  };
 
   const handleResetData = () => {
     setShowConfirmation(true);
@@ -21,6 +32,26 @@ const Settings = () => {
         setShowConfirmation(false);
       });
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
+        <h2 className="text-2xl font-bold mb-4">Enter Password</h2>
+        <form onSubmit={handlePasswordSubmit}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 mb-4 border rounded"
+            placeholder="Enter password"
+          />
+          <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+            Submit
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-lg show-up">

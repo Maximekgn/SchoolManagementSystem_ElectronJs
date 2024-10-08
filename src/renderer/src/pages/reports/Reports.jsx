@@ -72,6 +72,8 @@ const Reports = () => {
   const [studentsPerPage, setStudentsPerPage] = useState(10);
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
+  const [password, setPassword] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const fetchStudents = useCallback(async () => {
     try {
@@ -128,6 +130,35 @@ const Reports = () => {
     (currentPage - 1) * studentsPerPage,
     currentPage * studentsPerPage
   );
+
+  const handlePasswordSubmit = (e) => {
+    e.preventDefault();
+    if (password === '6002') {
+      setIsAuthenticated(true);
+    } else {
+      alert('Incorrect password');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
+        <h2 className="text-2xl font-bold mb-4">Enter Password</h2>
+        <form onSubmit={handlePasswordSubmit}>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 mb-4 border rounded"
+            placeholder="Enter password"
+          />
+          <button type="submit" className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+            Submit
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
