@@ -15,4 +15,4 @@ function createWindow () {
 
 app.whenReady().then(createWindow)
 
-// ... le reste de votre code main
+// ... le reste de votre code main.
