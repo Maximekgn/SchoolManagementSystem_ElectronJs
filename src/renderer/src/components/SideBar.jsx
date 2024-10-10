@@ -9,7 +9,6 @@ const SideBar = ({ setCurrentPage, currentPage }) => {
     { name: 'payments', icon: FiDollarSign, label: 'Payments' },
     { name: 'classes', icon: FiBriefcase, label: 'Classes' },
     { name: 'settings', icon: FiSettings, label: 'Settings' },
-    { name: 'reports', icon: FiFileText, label: 'Reports' },
   ];
 
   return (

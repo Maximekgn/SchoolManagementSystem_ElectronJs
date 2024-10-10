@@ -291,3 +291,4 @@ CREATE TABLE IF NOT EXISTS student_notes (
   noteDate DATE NOT NULL,
   FOREIGN KEY (studentId) REFERENCES students(id) ON DELETE CASCADE
 );  
+

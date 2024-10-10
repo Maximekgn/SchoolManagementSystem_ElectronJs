@@ -6,7 +6,6 @@ import Employees from './pages/employees/Employees';
 import Payment from './pages//payment/Payment';
 import Settings from './pages/settings/Settings';
 import Classes from './pages/classes/Classes';
-import Reports from './pages/reports/Reports';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -24,8 +23,6 @@ const App = () => {
         return <Settings />;
       case 'classes':
         return <Classes/>
-      case 'reports':
-        return <Reports/>
       default:
         return <Dashboard />;
     }
